@@ -40,16 +40,22 @@ function openHome() {
 
         await page.setExtraHTTPHeaders(headers);
         await page.setUserAgent(userAgent);
+        await page.setDefaultTimeout(1000000)
     
         const cookies = await page.cookies();
         fs.writeFileSync(exportFiles.cookies, JSON.stringify(cookies, null, 2));
     
+        await page.setViewport({
+            width: 1280,
+            height: 960,
+            deviceScaleFactor: 1,
+        });
         await page.goto(HOME_URL);
 
-        await sleep(1000)
+        await sleep(2000)
     
         // click login
-        let loginLinks = await page.$$('.hm-MainHeaderRHSLoggedOutMed_Login ')
+        let loginLinks = await page.$$('.hm-MainHeaderRHSLoggedOutWide_Login ')
         if (loginLinks.length === 1) {
             await loginLinks[0].click()
         } else {
@@ -57,7 +63,7 @@ function openHome() {
             process.exit()
         }
 
-        await sleep(1000)
+        await sleep(2000)
 
         // type username and password
         let inputs = await page.$$('input')
@@ -69,9 +75,30 @@ function openHome() {
 
         await page.type('.lms-StandardLogin_Username ', login.username)
         await page.type('.lms-StandardLogin_Password ', login.password)
-    
+        await page.click('.lms-LoginButton ')
+        await page.waitForNavigation()
+
+        await sleep(2000)
+
+        await page.goto('https://casino.bet365.com/Play/LiveRoulette')
+
+        await sleep(30000)
+
+        // close button
+
         if (enablePrint) {
             await page.screenshot({ path: screenshots.home });
+        }
+
+        let buttons = await page.$$('.close-button__icon')
+
+        if (buttons.length === 1) {
+            await sleep(2000)
+            if (enablePrint) {
+                await page.screenshot({ path: screenshots.home });
+            }
+        } else {
+            console.log('links de close -> ', buttons.length)
         }
       
         await browser.close();

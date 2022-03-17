@@ -24,6 +24,8 @@ exports.clickRouletteTab = async function clickRouletteTab(page) {
     console.log('Roulette tab clicked')
 }
 
+// lobby-category-item__icon
+
 /**
  * this method will retrieve all tables from page
  * 
@@ -42,8 +44,9 @@ exports.clickRouletteTab = async function clickRouletteTab(page) {
   }
  */
 exports.retrieveTables = async function retrieveTables(page) {
+    console.log('Verificando mesas..')
     let tables = await page.$$('.lobby__container .lobby-tables__item .lobby-table__wrapper')
-    return await Promise.all(
+    let result = await Promise.all(
         tables.map(async table => {
             let name = await table.$eval('.lobby-table__name-container', el => el.innerText.trim())
             let minMax = await table.$eval('.lobby-table__limits', el => el.innerText.trim())
@@ -72,9 +75,14 @@ exports.retrieveTables = async function retrieveTables(page) {
             return { name, min, max, history }
      })
     )
+
+    console.log(result.length + ' mesas encontradas!')
+    console.log(result)
+    return result
 }
 
 exports.findTablesToBet = function findTablesToBet(tables) {
+    console.log('Verificando possibilidade de aposta..')
     let tablesToBet = []
 
     let dG = [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
@@ -99,9 +107,9 @@ exports.findTablesToBet = function findTablesToBet(tables) {
         }
     })
 
-    return tablesToBet
-}
+    if (tablesToBet.length === 0) {
+        console.log('Sem possíbilidade de apostas')
+    }
 
-function findCommonElements(arr1, arr2) {
-    return arr1.some(item => arr2.includes(item))
+    return tablesToBet
 }

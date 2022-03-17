@@ -113,7 +113,7 @@ async function goToCasinoLive(page) {
     await printScreen(page, vars.screenshots.casino_home)
 }
 
-async function closeCasinoLive(page) {
+async function findCasinoFrame(page) {
     let frames = await page.frames()
     let rouletteFrame = frames.find(f => f.url() === 'https://casino.bet365.com/Play/LiveRoulette')
 
@@ -145,6 +145,10 @@ async function closeCasinoLive(page) {
         console.log('Frame casino client found')
     }
 
+    return casinoFrame
+}
+
+async function closeCasinoLive(casinoFrame) {
     let buttons = await casinoFrame.$$('.close-button__icon')
 
     if (buttons.length !== 1) {
@@ -171,7 +175,6 @@ async function closeCasinoLive(page) {
 
     await casinoFrame.click('.close-button__icon')
     await utils.sleep(2000)
-    await printScreen(page, vars.screenshots.games_home)
 }
 
 async function start() {
@@ -181,12 +184,15 @@ async function start() {
     await goToHome(page)
     await doLogin(page)
     await goToCasinoLive(page)
-    await closeCasinoLive(page)
-    await actions.clickRouletteTab(page)
 
-    let tables = actions.retrieveTables(page)
-    findTablesToBet(tables)
+    let casinoFrame = await findCasinoFrame(page)
+    await closeCasinoLive(casinoFrame)
+    await printScreen(page)
 
+    await actions.clickRouletteTab(casinoFrame)
+
+    let tables = actions.retrieveTables(casinoFrame)
+    actions.findTablesToBet(tables)
 
     await browser.close()
 }

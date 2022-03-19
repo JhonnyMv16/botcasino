@@ -1,22 +1,14 @@
+"use strict";
+
 const utils = require('./utils.js')
 const actions = require('./actions.js')
+const betManager = require('./bet_manager.js')
 const vars = require('./vars.js')
-const fs = require('fs');
-const puppeteer = require('puppeteer');
-
-if (!fs.existsSync('screenshots')){
-    fs.mkdirSync('screenshots');
-}
-
-async function printScreen(page, path) {
-    if (vars.enablePrint) {
-        await page.screenshot({ path: path });
-        console.log('print -> ', path)
-    }
-}
+const fs = require('fs')
+const puppeteer = require('puppeteer')
 
 async function createBrowser() {
-    return await puppeteer.launch();
+    return await puppeteer.launch()
 }
 
 async function saveCookies(page) {
@@ -42,158 +34,122 @@ function readCookies() {
 
 async function createPage(browser) {
     const page = await browser.newPage();
+    await page.setViewport(vars.viewPort);
     await page.setExtraHTTPHeaders(vars.headers);
     await page.setUserAgent(vars.userAgent);
-    await page.setViewport(vars.viewPort);
     return page
 }
 
 async function goToHome(page) {
     console.log('Starting...')
     await page.goto(vars.HOME_URL);
+    await page.waitForXPath('//*[contains(text(), "Login")]', { timeout: 0 })
     await utils.sleep(5000)
     console.log('Home opened!')
-    await printScreen(page, vars.screenshots.home)
+    await actions.printScreen(page)
 }  
 
 async function doLogin(page) {
     console.log('Starting login...')
-    let loginLinks = await page.$$('.hm-MainHeaderRHSLoggedOutWide_Login ')
 
-    if (loginLinks.length !== 1) {
-        console.error('Links de logins -> ', loginLinks.length)
-        printScreen(page, vars.screenshots.error)
-        process.exit(0)
-    }
-
-    await loginLinks[0].click()
-    await utils.sleep(2000)
-
-    let inputs = await page.$$('input')
-    if (inputs.length <= 1) {
-        console.error('Inputs de login-> ', inputs.length)
-        printScreen(page, vars.screenshots.error)
-        process.exit(0)
-    }
-
-    await printScreen(page, vars.screenshots.form)
+    await page.mouse.click(1648, 66)
+    await utils.sleep(3000)
+    await actions.printScreen(page)
+    
     await page.type('.lms-StandardLogin_Username ', vars.login.username)
     await utils.sleep(1000)
     await page.type('.lms-StandardLogin_Password ', vars.login.password)
     await utils.sleep(1000)
-
-    await printScreen(page, vars.screenshots.form_fill)
+    await actions.printScreen(page)
+    
     await page.click('.lms-LoginButton ')
     await utils.sleep(15000)
     await saveCookies(page)
 
-    console.log('Login realized!')
-    await printScreen(page, vars.screenshots.login_complete)
+    console.log('Login realized!\n')
+    await actions.printScreen(page)
 }
-
-// maximizar
-// inline-games-page-component__game-header-right 
-
-// Criador de apostas
-
-// Aba de Roletas
-// lobby-category-item__wrapper [1]
-
-// Cada roleta
-// lobby-tables__item
-// roulette-history...$31d21d2 > roulette-history-item_4343432
 
 async function goToCasinoLive(page) {
     console.log('Opening casino live...')
     await page.goto('https://casino.bet365.com/Play/LiveRoulette')
     await page.waitForXPath('//*[contains(text(), "Live Roulette ")]', { timeout: 0 })
-    await utils.sleep(20000)
-
-    console.log('Casino opened!')
-    await printScreen(page, vars.screenshots.casino_home)
-}
-
-async function findCasinoFrame(page) {
-    let frames = await page.frames()
-    let rouletteFrame = frames.find(f => f.url() === 'https://casino.bet365.com/Play/LiveRoulette')
-
-    if (!rouletteFrame) {
-        console.error('Frame roulette live not found')
-        process.exit(0)
-    } else {
-        console.log('Frame roulette found')
-    }
-
-    let gamingFrame = rouletteFrame.childFrames().find(f => f.url().includes('https://www.sgla365.com/GamingLaunch'))
-
-    if (!gamingFrame) {
-        console.error('Frame gaming launch not found')
-        process.exit(0)
-    } else {
-        console.log('Frame gaming launch found')
-
-        let hasCloseButton = await gamingFrame.$$('.close-button__icon').length > 0
-        console.log('gaming launch has close button? ', hasCloseButton)
-    }
-
-    let casinoFrame = gamingFrame.childFrames().find(f => f.name() === 'gamecontent')
-
-    if (!casinoFrame) {
-        console.error('Frame casino client not found')
-        process.exit(0)
-    } else {
-        console.log('Frame casino client found')
-    }
-
-    return casinoFrame
-}
-
-async function closeCasinoLive(casinoFrame) {
-    let buttons = await casinoFrame.$$('.close-button__icon')
-
-    if (buttons.length !== 1) {
-        console.error('links de close -> ', buttons.length)
-
-        try {
-            let gamingContent = await gamingFrame.content()
-            fs.writeFileSync('gaming-frame.html', gamingContent)
-         } catch(e) {
-             console.log('Fail to get gaming frame html content')
-             console.log(e.message)
-        }
-
-        try {
-            let frameContent = await casinoFrame.content()
-            fs.writeFileSync('casino-frame.html', frameContent)
-         } catch(e) {
-             console.log('Fail to get casino client frame html content')
-             console.log(e.message)
-        }
-
-        process.exit(0)
-    }
-
-    await casinoFrame.click('.close-button__icon')
-    await utils.sleep(2000)
+    await utils.sleep(10000)
+    console.log('Casino opened!\n')
 }
 
 async function start() {
     const browser = await createBrowser()
     const page = await createPage(browser)
 
+    /// open home
     await goToHome(page)
+
+    // do login
     await doLogin(page)
+
+    // open casino
     await goToCasinoLive(page)
+    await utils.sleep(2000)
+    await actions.printScreen(page)
 
-    let casinoFrame = await findCasinoFrame(page)
-    await closeCasinoLive(casinoFrame)
-    await printScreen(page)
+    // close casino frame
+    let casinoFrame = await actions.findCasinoFrame(page)
+    await utils.sleep(20000)
+    await actions.closeCasinoLive(casinoFrame)
+    await utils.sleep(5000)
 
+    // click roulette 
     await actions.clickRouletteTab(casinoFrame)
+    await utils.sleep(3000)
+    await actions.printScreen(page)
 
-    let tables = actions.retrieveTables(casinoFrame)
-    actions.findTablesToBet(tables)
+    // expand tables
+    await actions.toggleExpandTables(page)
+    await utils.sleep(3000)
+    await actions.printScreen(page)
 
+    // find possible bets
+    
+    var betFound = 0
+
+    const MAX_BET = 5
+    const TOTAL_VERIFICATIONS = 10000
+    const VERIFICATION_DELAY = 1500 // Five seconds
+    
+    for (let index = 1; index <= TOTAL_VERIFICATIONS && betFound < MAX_BET; index++) {
+
+        if (index > 1) {
+            // await for next verification
+            await utils.sleep(VERIFICATION_DELAY)
+        }
+
+        let tables = await actions.findTablesToBet(casinoFrame)
+        let possibleBets = betManager.findPossibleBet(tables)
+
+        console.log(`Verificação ${index}`)
+
+        if (possibleBets.length > 0) {
+            betFound++;
+
+            let possibleBet = possibleBets[0]
+            console.log('\n✨ GO BET ✨ \n')
+            console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
+
+            await betManager.bet(page, casinoFrame, possibleBet)
+        }
+
+        await page.keyboard.press('ArrowDown');
+        await utils.sleep(2000) // wait for 2 seconds
+        await page.keyboard.press('ArrowUp');
+    }
+
+    // logout
+    //await actions.logout(page)
+    //await utils.sleep(5000)
+    //await actions.printScreen(page)
+
+    // close browser
     await browser.close()
 }
 

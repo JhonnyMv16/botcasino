@@ -5,20 +5,10 @@ module.exports = {
     enablePrint: true,
 
     viewPort: {
-        width: 1280,
-        height: 960,
+        width: 1700,
+        height: 960 ,
         deviceScaleFactor: 1,
-    },
-    
-     screenshots: {
-        home: 'screenshots/home.png',
-        casino_home: 'screenshots/casino-home.png',
-        games_home: 'screenshots/games-home.png', 
-        form: 'screenshots/form.png',
-        form_fill: 'screenshots/form-fill.png',
-        login_complete: 'screenshots/login_complete.png',
-        close: 'screenshots/close.png',
-        error: 'screenshots/error.png'
+        hasTouch: true
     },
     
      login: {

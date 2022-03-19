@@ -16,7 +16,7 @@ async function saveCookies(page) {
         const cookies = await page.cookies();
         fs.writeFileSync(vars.exportFiles.cookies, JSON.stringify(cookies, null, 2));
         console.log('Cookies salvos -> ', cookies.length)
-    }catch(e) {
+    } catch (e) {
         console.log('Não foi possível salvar os cookies')
         console.error(e.message)
     }
@@ -47,7 +47,7 @@ async function goToHome(page) {
     await utils.sleep(5000)
     console.log('Home opened!')
     await actions.printScreen(page)
-}  
+}
 
 async function doLogin(page) {
     console.log('Starting login...')
@@ -55,13 +55,13 @@ async function doLogin(page) {
     await page.mouse.click(1648, 66)
     await utils.sleep(3000)
     await actions.printScreen(page)
-    
+
     await page.type('.lms-StandardLogin_Username ', vars.login.username)
     await utils.sleep(1000)
     await page.type('.lms-StandardLogin_Password ', vars.login.password)
     await utils.sleep(1000)
     await actions.printScreen(page)
-    
+
     await page.click('.lms-LoginButton ')
     await utils.sleep(15000)
     await saveCookies(page)
@@ -79,78 +79,85 @@ async function goToCasinoLive(page) {
 }
 
 async function start() {
+
     const browser = await createBrowser()
     const page = await createPage(browser)
 
-    /// open home
-    await goToHome(page)
+    try {
 
-    // do login
-    await doLogin(page)
+        /// open home
+        await goToHome(page)
 
-    // open casino
-    await goToCasinoLive(page)
-    await utils.sleep(2000)
-    await actions.printScreen(page)
+        // do login
+        await doLogin(page)
 
-    // close casino frame
-    let casinoFrame = await actions.findCasinoFrame(page)
-    await utils.sleep(20000)
-    await actions.closeCasinoLive(casinoFrame)
-    await utils.sleep(5000)
+        // open casino
+        await goToCasinoLive(page)
+        await utils.sleep(2000)
+        await actions.printScreen(page)
 
-    // click roulette 
-    await actions.clickRouletteTab(casinoFrame)
-    await utils.sleep(3000)
-    await actions.printScreen(page)
+        // close casino frame
+        let casinoFrame = await actions.findCasinoFrame(page)
+        await utils.sleep(20000)
+        await actions.closeCasinoLive(casinoFrame)
+        await utils.sleep(5000)
 
-    // expand tables
-    await actions.toggleExpandTables(page)
-    await utils.sleep(3000)
-    await actions.printScreen(page)
+        // click roulette 
+        await actions.clickRouletteTab(casinoFrame)
+        await utils.sleep(3000)
+        await actions.printScreen(page)
 
-    // find possible bets
-    
-    var betFound = 0
+        // expand tables
+        await actions.toggleExpandTables(page)
+        await utils.sleep(3000)
+        await actions.printScreen(page)
 
-    const MAX_BET = 5
-    const TOTAL_VERIFICATIONS = 10000
-    const VERIFICATION_DELAY = 1500 // Five seconds
-    
-    for (let index = 1; index <= TOTAL_VERIFICATIONS && betFound < MAX_BET; index++) {
+        // find possible bets
 
-        if (index > 1) {
-            // await for next verification
-            await utils.sleep(VERIFICATION_DELAY)
+        var betFound = 0
+
+        const MAX_BET = 5
+        const TOTAL_VERIFICATIONS = 10000
+        const VERIFICATION_DELAY = 1500 // Five seconds
+
+        for (let index = 1; index <= TOTAL_VERIFICATIONS && betFound < MAX_BET; index++) {
+
+            if (index > 1) {
+                // await for next verification
+                await utils.sleep(VERIFICATION_DELAY)
+            }
+
+            let tables = await actions.findTablesToBet(casinoFrame)
+            let possibleBets = betManager.findPossibleBet(tables)
+
+            console.log(`Verificação ${index}`)
+
+            if (possibleBets.length > 0) {
+                betFound++;
+
+                let possibleBet = possibleBets[0]
+                console.log('\n✨ GO BET ✨ \n')
+                console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
+
+                await betManager.bet(page, casinoFrame, possibleBet)
+            }
+
+            await page.keyboard.press('ArrowDown');
+            await utils.sleep(2000) // wait for 2 seconds
+            await page.keyboard.press('ArrowUp');
         }
 
-        let tables = await actions.findTablesToBet(casinoFrame)
-        let possibleBets = betManager.findPossibleBet(tables)
+        // logout
+        //await actions.logout(page)
+        //await utils.sleep(5000)
+        //await actions.printScreen(page)
 
-        console.log(`Verificação ${index}`)
-
-        if (possibleBets.length > 0) {
-            betFound++;
-
-            let possibleBet = possibleBets[0]
-            console.log('\n✨ GO BET ✨ \n')
-            console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
-
-            await betManager.bet(page, casinoFrame, possibleBet)
-        }
-
-        await page.keyboard.press('ArrowDown');
-        await utils.sleep(2000) // wait for 2 seconds
-        await page.keyboard.press('ArrowUp');
+    } catch (e) {
+        console.error(`Error -> ${e.message}`)
+    } finally {
+        // close browser
+        await browser.close()
     }
-
-    // logout
-    //await actions.logout(page)
-    //await utils.sleep(5000)
-    //await actions.printScreen(page)
-
-    // close browser
-    await browser.close()
 }
 
 start();

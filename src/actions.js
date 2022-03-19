@@ -4,6 +4,8 @@ const vars = require('./vars.js')
 const fs = require('fs');
 
 var print_step = 1;
+var print_green = 1;
+var print_loss = 1;
 
 async function findAsync(arr, asyncCallback) {
     const promises = arr.map(asyncCallback);
@@ -29,6 +31,37 @@ exports.printScreen = async function (page) {
     }
 
     print_step++;
+}
+
+exports.printGreen = async function (page) {
+    if (vars.enablePrint) {
+
+        if (!fs.existsSync('screenshots')) {
+            fs.mkdirSync('screenshots');
+        }
+
+        let path = `screenshots/green-${print_green}.jpg`
+        await page.screenshot({ path: path });
+        console.log(`print green -> ${path}\n`)
+    }
+
+    print_green++;
+}
+
+
+exports.printLoss = async function (page) {
+    if (vars.enablePrint) {
+
+        if (!fs.existsSync('screenshots')) {
+            fs.mkdirSync('screenshots');
+        }
+
+        let path = `screenshots/loss-${print_loss}.jpg`
+        await page.screenshot({ path: path });
+        console.log(`print loss -> ${path}\n`)
+    }
+
+    print_loss++;
 }
 
 exports.toggleExpandTables = async function expandTables(mainPage) {
@@ -131,10 +164,11 @@ exports.findCasinoFrame = async function (page) {
 }
 
 exports.logout = async function logout(page) {
-    let links = await page.$$('.members-dropdown-component__log-out-link')
-    if (links.length > 0) {
+    let links = await page.$$('div.members-dropdown-component__log-out-link')
+    if (links && links.length > 0) {
         let logoutLink = links[0]
         await logoutLink.click()
+        console.log('Logout sucess!\n')
     } else {
         console.error('Error -> Logout link not found!\n')
     }
@@ -163,6 +197,7 @@ exports.openTable = async function (casinoFrame, table) {
 }
 
 exports.getTableBetPoints = async function (casinoFrame) {
+
     async function findColumns() {
         let result = await casinoFrame.$$eval('text', elements => {
             let columns = elements.filter(el => el.textContent === '2to1')
@@ -201,10 +236,17 @@ exports.getTableBetPoints = async function (casinoFrame) {
        return { db, dm, da }
     }
 
+
+    var minBtn = await casinoFrame.$$eval('text.chip__label', els => {
+        let e = els.filter(e => e.textContent.trim() === "2.5")[0]
+        let rect = e.getBoundingClientRect()
+        return { name: 'Botão 2.5', x: rect.x, y: rect.y }
+    })
+
     let columns = await findColumns()
     let dozens = await findDozens()
 
-    return  { ...columns, ...dozens }
+    return { ...columns, ...dozens, minBtn: minBtn }
 } 
 
 exports.getTableState = async function (casinoFrame) {
@@ -240,23 +282,9 @@ exports.getLastResult = async function (casinoFrame) {
     })
 }
 
-exports.clickDuziaBaixa = async function (page) {
-    console.log(`Selecionando apostando duzia baixa..\n`)
-    await page.mouse.click(540, 672)
-}
-
-exports.clickDuziaMedia = async function (page) {
-    console.log(`Selecionando apostando duzia média..\n`)
-    await page.mouse.click(684, 677)
-}
-
-exports.clickDuziaAlta = async function (page) {
-    console.log(`Selecionando apostando duzia alta..\n`)
-    await page.mouse.click(825, 671)
-}
-
 exports.clickMinValue = async function (casinoFrame) {
     console.log(`Selecting min value..`)
+    await casinoFrame.$$('div')
     await casinoFrame.evaluate(_ => {
         function click(x, y) {
             var ev = new MouseEvent('click', {

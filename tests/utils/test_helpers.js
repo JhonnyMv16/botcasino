@@ -32,7 +32,7 @@ async function testAsync(name, expected, func) {
         console.log('\nExpected')
         console.log(expected)
         console.log('\nResult')
-        console.log(value)
+        console.log(`${value}\n`)
     }
 }
 

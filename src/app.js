@@ -117,14 +117,18 @@ async function start() {
         var betFound = 0
 
         const MAX_BET = 5
-        const TOTAL_VERIFICATIONS = 10000
+        const TOTAL_VERIFICATIONS = 4000
         const VERIFICATION_DELAY = 1500 // Five seconds
 
         for (let index = 1; index <= TOTAL_VERIFICATIONS && betFound < MAX_BET; index++) {
 
             if (index > 1) {
+                await page.keyboard.press('ArrowDown');
+
                 // await for next verification
                 await utils.sleep(VERIFICATION_DELAY)
+                
+                await page.keyboard.press('ArrowUp');
             }
 
             let tables = await actions.findTablesToBet(casinoFrame)
@@ -141,16 +145,15 @@ async function start() {
 
                 await betManager.bet(page, casinoFrame, possibleBet)
             }
-
-            await page.keyboard.press('ArrowDown');
-            await utils.sleep(2000) // wait for 2 seconds
-            await page.keyboard.press('ArrowUp');
         }
 
+        await actions.toggleExpandTables(page)
+        await utils.sleep(2000)
+
         // logout
-        //await actions.logout(page)
-        //await utils.sleep(5000)
-        //await actions.printScreen(page)
+        await actions.logout(page)
+        await utils.sleep(5000)
+        await actions.printScreen(page)
 
     } catch (e) {
         console.error(`Error -> ${e.message}`)

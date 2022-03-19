@@ -136,7 +136,9 @@ const bet = async function (page, casinoFrame, table) {
 
         let balance = await actions.getBalance(casinoFrame)
 
-        if (Number(balance) < 5) {
+        console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
+
+        if (Number(balance) < 20) {
             console.error('Erro -> Saldo insuficiente para realizar aposta!\n')
             await actions.closeCasinoLive(casinoFrame)
             resolve()
@@ -164,9 +166,6 @@ const bet = async function (page, casinoFrame, table) {
             return
         }
 
-        await actions.clickMinValue(casinoFrame)
-        await utils.sleep(500)
-
         const MAX_ATTEMTPS = 2
 
         var currentState = state
@@ -175,32 +174,42 @@ const bet = async function (page, casinoFrame, table) {
 
         const betPoints = await actions.getTableBetPoints(casinoFrame)
 
+        click(page, betPoints.minBtn.x, betPoints.minBtn.y, 1) // click min value btn
+
         for (let attempts = 1; attempts <= MAX_ATTEMTPS && !isResultGreen; attempts++) {
             
+            console.log(`Tentativa ${attempts}\n`)
+
+            var clicksToBet = 1
+
+            if (attempts == 2) {
+                clicksToBet = 3
+            }
+
             switch (table.code) {
                 case DB_DM: {
-                    click(page, betPoints.db.x, betPoints.db.y, attempts)
-                    click(page, betPoints.dm.x, betPoints.dm.y, attempts)
+                    click(page, betPoints.db.x, betPoints.db.y, clicksToBet)
+                    click(page, betPoints.dm.x, betPoints.dm.y, clicksToBet)
                 }
                 case DM_DA: {
-                    click(page, betPoints.dm.x, betPoints.dm.y, attempts)
-                    click(page, betPoints.da.x, betPoints.da.y, attempts)
+                    click(page, betPoints.dm.x, betPoints.dm.y, clicksToBet)
+                    click(page, betPoints.da.x, betPoints.da.y, clicksToBet)
                 }
                 case DB_DA: {
-                    click(page, betPoints.db.x, betPoints.db.y, attempts)
-                    click(page, betPoints.da.x, betPoints.da.y, attempts)
+                    click(page, betPoints.db.x, betPoints.db.y, clicksToBet)
+                    click(page, betPoints.da.x, betPoints.da.y, clicksToBet)
                 }
                 case BET_C1_C2: {
-                    click(page, betPoints.c1.x, betPoints.c1.y, attempts)
-                    click(page, betPoints.c2.x, betPoints.c2.y, attempts)
+                    click(page, betPoints.c1.x, betPoints.c1.y, clicksToBet)
+                    click(page, betPoints.c2.x, betPoints.c2.y, clicksToBet)
                 }
                 case BET_C2_C3: {
-                    click(page, betPoints.c2.x, betPoints.c2.y, attempts)
-                    click(page, betPoints.c3.x, betPoints.c3.y, attempts)
+                    click(page, betPoints.c2.x, betPoints.c2.y, clicksToBet)
+                    click(page, betPoints.c3.x, betPoints.c3.y, clicksToBet)
                 }
                 case BET_C1_C3: {
-                    click(page, betPoints.c1.x, betPoints.c1.y, attempts)
-                    click(page, betPoints.c3.x, betPoints.c3.y, attempts)
+                    click(page, betPoints.c1.x, betPoints.c1.y, clicksToBet)
+                    click(page, betPoints.c3.x, betPoints.c3.y, clicksToBet)
                 }
             }
 
@@ -221,10 +230,13 @@ const bet = async function (page, casinoFrame, table) {
 
         if (isResultGreen) {
             console.log(`${resultNumber} GREEN ✔️\n`)
+            await actions.printGreen(page)
         } else {
             console.log(`${resultNumber} LOSS ❌\n`)
+            await actions.printLoss(page)
         }
 
+        console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
         resolve()
     })
 }

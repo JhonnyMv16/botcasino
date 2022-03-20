@@ -164,7 +164,7 @@ exports.findCasinoFrame = async function (page) {
 }
 
 exports.logout = async function logout(page) {
-    let links = await page.$$('div.members-dropdown-component__log-out-link')
+    let links = await page.$$eval('div.members-dropdown-component__log-out-link')
     if (links && links.length > 0) {
         let logoutLink = links[0]
         await logoutLink.click()
@@ -175,6 +175,7 @@ exports.logout = async function logout(page) {
 }
 
 exports.closeCasinoLive = async function (casinoFrame) {
+    await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]', { timeout: 0 })
     let buttons = await casinoFrame.$('.close-button__icon')
 
     if (buttons.length === 0) {
@@ -192,8 +193,6 @@ exports.openTable = async function (casinoFrame, table) {
     let elements = await casinoFrame.$$('.lobby-tables__item .lobby-table__wrapper .lobby-table .lobby-table__container')
     let tableEl = elements[table.index]
     await tableEl.click()
-    await casinoFrame.waitForXPath('//*[contains(text(), "MAIS JOGOS")]', { timeout: 0, visible: true })
-    console.log('Table opened!\n')
 }
 
 exports.getTableBetPoints = async function (casinoFrame) {
@@ -247,10 +246,21 @@ exports.getTableBetPoints = async function (casinoFrame) {
     let dozens = await findDozens()
 
     return { ...columns, ...dozens, minBtn: minBtn }
-} 
+}
 
 exports.getTableState = async function (casinoFrame) {
-    let canBet = await casinoFrame.$eval('.dealer-message-text', el => el.innerText.includes('FAÇA AS SUAS APOSTAS') || el.innerText.includes('ÚLTIMAS APOSTAS'))
+
+    var canBet = false
+
+    try {
+        canBet = await casinoFrame.$eval('span.dealer-message-text', el => el.innerText.includes('FAÇA AS SUAS APOSTAS'))   
+    } catch (error) {
+        console.log('Try get can bet error')
+        canBet = await casinoFrame.evaluate( _ => {
+            return (document.documentElement.textContent || document.documentElement.innerText).indexOf('FAÇA AS SUAS APOSTAS') > -1
+        })    
+    }
+
     let historyStr = await casinoFrame.$eval('.roulette-game-area__history-line', el => el.innerText)
     let history = historyStr.split('\n').map(value => Number(value))
     let balance = await getBalance(casinoFrame)
@@ -258,7 +268,6 @@ exports.getTableState = async function (casinoFrame) {
 }
 
 exports.closeBetModal = async function (casinoFrame) {
-    console.log(`Closing modal..`)
     let elements = await casinoFrame.$$('.close-button')
     let shouldClose = elements.length > 1
 
@@ -266,43 +275,7 @@ exports.closeBetModal = async function (casinoFrame) {
         let last = elements.length - 1
         let modalClose = elements[last]
         await modalClose.click()
-        console.log(`Modal closed!\n`)
-    } else {
-        console.log(`Modal not found!\n`)
     }
 
     return shouldClose
-}
-
-exports.getLastResult = async function (casinoFrame) {
-    return await casinoFrame.evaluate(_ => {
-        let el = document.querySelector('.roulette-game-area__history-line')
-        let lastResult = el.innerText.split('\n')[0]
-        return lastResult
-    })
-}
-
-exports.clickMinValue = async function (casinoFrame) {
-    console.log(`Selecting min value..`)
-    await casinoFrame.$$('div')
-    await casinoFrame.evaluate(_ => {
-        function click(x, y) {
-            var ev = new MouseEvent('click', {
-                'view': window,
-                'bubbles': true,
-                'cancelable': true,
-                'screenX': x,
-                'screenY': y
-            });
-
-            var el = document.elementFromPoint(x, y);
-            el.dispatchEvent(ev);
-        }
-
-        let chips = document.querySelectorAll('.arrow-slider__scrollable-content svg')
-        let chip = chips[0]
-        let rec = chip.getBoundingClientRect()
-        click(rec.x, rec.y)
-    })
-    console.log(`Min value selected\n`)
 }

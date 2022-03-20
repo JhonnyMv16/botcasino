@@ -118,130 +118,211 @@ const findPossibleBet = function (tables) {
     return tablesToBet
 }
 
-async function click(page, x, y, count) {
-    for (let index = 1; index <= count; index++) {
-        await page.mouse.click(x, y)
-        await utils.sleep(250)
-    }
+async function clickAt(page, x, y, count) {
+    return await Promise.all([
+        page.mouse.click(x, y, { clickCount: count }),
+        utils.sleep(300)
+    ])
+}
+
+async function clickAtFrame(frame, count=1, elementSelector) {
+
+
+    return await frame.evaluate((count) => {
+        var el = document.querySelectorAll('.chip-animation-wrapper')[0]
+        let rect = el.getBoundingClientRect()
+        clickXy(rect.x, rect.y, count)
+    }, count)
+}
+
+async function exposeFunction(frame) {
+    return await frame.exposeFunction("clickXy", function click(x, y, count){
+        var ev = new MouseEvent('click', {
+            'view': window,
+            'bubbles': true,
+            'cancelable': true,
+            'screenX': x,
+            'screenY': y
+        });
+
+        var el = document.elementFromPoint(x, y);
+        for (let index = 1; index <= count; index++) {
+            el.dispatchEvent(ev);        
+        }
+    })
+}
+
+async function clickMinValue(frame, count) {
+    await exposeFunction(frame)
+    return await frame.evaluate((count) => {
+        var el = document.querySelectorAll('.chip-animation-wrapper')[0]
+        let rect = el.getBoundingClientRect()
+        clickXy(rect.x, rect.y, count)
+    }, count)
+}
+
+async function clickLowDozen(page, count) {
+    return await clickAt(page, 667.5, 736.4, count)
+}
+
+async function clickMediumDozen(page, count) {
+    return await clickAt(page, 832.7, 736.4, count)
+}
+
+async function clickHighDozen(page, count) {
+    return await clickAt(page, 1002.22, 736.4, count)
+}
+
+async function clickColOne(page, count) {
+    return await clickAt(page, 1114.4, 696.4, count)
+}
+
+async function clickColTwo(page, count) {
+    return await clickAt(page, 1114.4, 654.6, count)
+}
+
+async function clickColThree(page, count) {
+    return await clickAt(page, 1114.4, 612.8, count)
 }
 
 const bet = async function (page, casinoFrame, table) {
-    return new Promise(async (resolve) => {
-        
-        await actions.openTable(casinoFrame, table)
-        await utils.sleep(1500)
-        await actions.printScreen(page)
-        
-        await actions.closeBetModal(casinoFrame)
-
-        let balance = await actions.getBalance(casinoFrame)
-
-        console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
-
-        if (Number(balance) < 20) {
-            console.error('Erro -> Saldo insuficiente para realizar aposta!\n')
-            await actions.closeCasinoLive(casinoFrame)
-            resolve()
-            return
-        }
-
-        let state = await actions.getTableState(casinoFrame)
-        let xHistory = table.history.slice(0, 3)
-        let yHistory = state.history.slice(0, 3)
-
-        if (JSON.stringify(xHistory) !== JSON.stringify(yHistory)) {
-            console.error('Erro -> Divergencia encontrada no histórico da mesa!\n')
-            console.log(xHistory)
-            console.log(yHistory)
-            await actions.closeCasinoLive(casinoFrame)
-            resolve()
-            return
-        }
-
-        if (!state.canBet) {
-            console.error('Erro -> O casino não está em periodo de aposta!\n')
+    return new Promise(async (resolve, reject) => {
+        try {
+            await actions.openTable(casinoFrame, table)
+            await utils.sleep(4000)
             await actions.printScreen(page)
-            await actions.closeCasinoLive(casinoFrame)
-            resolve()
-            return
-        }
-
-        const MAX_ATTEMTPS = 2
-
-        var currentState = state
-        var isResultGreen = false 
-        var resultNumber = 0
-
-        const betPoints = await actions.getTableBetPoints(casinoFrame)
-
-        click(page, betPoints.minBtn.x, betPoints.minBtn.y, 1) // click min value btn
-
-        for (let attempts = 1; attempts <= MAX_ATTEMTPS && !isResultGreen; attempts++) {
-            
-            console.log(`Tentativa ${attempts}\n`)
-
-            var clicksToBet = 1
-
-            if (attempts == 2) {
-                clicksToBet = 3
+      
+            await actions.closeBetModal(casinoFrame)
+    
+            let balance = await actions.getBalance(casinoFrame)
+    
+            console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
+    
+            if (Number(balance) < 20) {
+                console.error('Erro -> Saldo insuficiente para realizar aposta!\n')
+                await utils.sleep(30000)
+                await actions.closeCasinoLive(casinoFrame)
+                resolve(false)
+                return
             }
+    
+            let state = await actions.getTableState(casinoFrame)
+            let xHistory = table.history.slice(0, BET_SLICE)
+            let yHistory = state.history.slice(0, BET_SLICE)
+    
+            if (JSON.stringify(xHistory) !== JSON.stringify(yHistory)) {
+                console.error('Erro -> Divergencia encontrada no histórico da mesa!\n')
+                console.log(xHistory)
+                console.log(yHistory)
+                console.log('\n')
+                await utils.sleep(30000)
+                await actions.closeCasinoLive(casinoFrame)
+                resolve(false)
+                return
+            }
+    
+            if (!state.canBet) {
+                console.error('Erro -> O casino não está em periodo de aposta!\n')
+                await actions.printScreen(page)
+                await utils.sleep(30000)
+                await actions.closeCasinoLive(casinoFrame)
+                resolve(false)
+                return
+            }
+    
+            const MAX_ATTEMTPS = 2
+    
+            var currentState = state
+            var isResultGreen = false 
+            var resultNumber = 0
+    
+            await clickMinValue(page, 1)
+            await actions.printScreen(page)
+    
+            for (let attempts = 1; attempts <= MAX_ATTEMTPS && !isResultGreen; attempts++) {
+                
+                console.log(`Tentativa ${attempts}\n`)
+    
+                var clicksToBet = 1
+    
+                if (attempts === 2) {
+                    clicksToBet = 3
+                }
+    
+                switch (table.code) {
+                    case DB_DM: {
+                        await clickLowDozen(page, clicksToBet)
+                        await clickMediumDozen(page, clicksToBet)
+                        break;
+                    }
+                    case DM_DA: {
+                        await clickMediumDozen(page, clicksToBet)
+                        await clickHighDozen(page, clicksToBet)
+                        break;
+                    }
+                    case DB_DA: {
+                        await clickLowDozen(page, clicksToBet)
+                        await clickHighDozen(page, clicksToBet)
+                        break;
+                    }
+                    case BET_C1_C2: {
+                        await clickColOne(page, clicksToBet)
+                        await clickColTwo(page, clicksToBet)
+                        break;
+                    }
+                    case BET_C2_C3: {
+                        await clickColTwo(page, clicksToBet)
+                        await clickColThree(page, clicksToBet)
+                        break;
+                    }
+                    case BET_C1_C3: {
+                        await clickColOne(page, clicksToBet)
+                        await clickColThree(page, clicksToBet)
+                        break;
+                    }
+                }
 
-            switch (table.code) {
-                case DB_DM: {
-                    click(page, betPoints.db.x, betPoints.db.y, clicksToBet)
-                    click(page, betPoints.dm.x, betPoints.dm.y, clicksToBet)
-                }
-                case DM_DA: {
-                    click(page, betPoints.dm.x, betPoints.dm.y, clicksToBet)
-                    click(page, betPoints.da.x, betPoints.da.y, clicksToBet)
-                }
-                case DB_DA: {
-                    click(page, betPoints.db.x, betPoints.db.y, clicksToBet)
-                    click(page, betPoints.da.x, betPoints.da.y, clicksToBet)
-                }
-                case BET_C1_C2: {
-                    click(page, betPoints.c1.x, betPoints.c1.y, clicksToBet)
-                    click(page, betPoints.c2.x, betPoints.c2.y, clicksToBet)
-                }
-                case BET_C2_C3: {
-                    click(page, betPoints.c2.x, betPoints.c2.y, clicksToBet)
-                    click(page, betPoints.c3.x, betPoints.c3.y, clicksToBet)
-                }
-                case BET_C1_C3: {
-                    click(page, betPoints.c1.x, betPoints.c1.y, clicksToBet)
-                    click(page, betPoints.c3.x, betPoints.c3.y, clicksToBet)
+                console.log('Aposta feita!')
+                await actions.printScreen(page)
+    
+                var finishedRound = false
+                while (!finishedRound) {
+                    await utils.sleep(2000)
+    
+                    console.log('Get Table State')
+                    await actions.printScreen(page)
+                    let newState = await actions.getTableState(casinoFrame)
+                    resultNumber = newState.history[0]
+                    finishedRound = currentState.history[0] !== resultNumber
+    
+                    if (finishedRound) {
+                        isResultGreen = newState.balance > currentState.balance
+                        currentState = newState
+                    }
                 }
             }
-
-            var finishedRound = false
-            while (!finishedRound) {
-                await utils.sleep(1000)
-
-                let newState = await actions.getTableState(casinoFrame)
-                resultNumber = newState.history[0]
-                finishedRound = currentState.history[0] !== resultNumber
-
-                if (finishedRound) {
-                    isResultGreen = newState.balance > currentState.balance
-                    currentState = newState
-                }
+    
+            if (isResultGreen) {
+                console.log(`${resultNumber} GREEN ✔️\n`)
+                await actions.printGreen(page)
+            } else {
+                console.log(`${resultNumber} LOSS ❌\n`)
+                await actions.printLoss(page)
             }
-        }
+    
+            console.log('Finish bet')
+            console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
+            await actions.printScreen(page)
 
-        if (isResultGreen) {
-            console.log(`${resultNumber} GREEN ✔️\n`)
-            await actions.printGreen(page)
-        } else {
-            console.log(`${resultNumber} LOSS ❌\n`)
-            await actions.printLoss(page)
+            resolve(true)
+        }catch(e){
+            reject(e)
         }
-
-        console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
-        resolve()
     })
 }
 
 module.exports = {
     findPossibleBet,
-    bet
+    bet,
+    clickMinValue
 }

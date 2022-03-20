@@ -51,9 +51,9 @@ const TableBetPointsTest = async () => {
 
 (async () => {
 
-    await testAsync('Find tables to bet', TABLES_TO_BET, FindTablesToBetTest)
-    await testAsync('Table state', TABLE_STATE_DEFAULT, TableStateTest)
-    await testAsync('Table bet points', TABLE_BET_POINTS, TableBetPointsTest)
+  //  await testAsync('Find tables to bet', TABLES_TO_BET, FindTablesToBetTest)
+  //  await testAsync('Table state', TABLE_STATE_DEFAULT, TableStateTest)
+  //  await testAsync('Table bet points', TABLE_BET_POINTS, TableBetPointsTest)
 
     betManagerTests.tests()
 

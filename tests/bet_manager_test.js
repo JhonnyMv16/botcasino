@@ -1,3 +1,4 @@
+const puppeteer = require('puppeteer');
 const betManager = require('../src/bet_manager.js')
 const constants = require('./utils/test_constants.js')
 const helpers = require('./utils/test_helpers.js')
@@ -20,6 +21,8 @@ const BET_DM_DA_EXPECTED = [
 /* Helpers */
 
 const testsync = helpers.testSync
+const testAsync = helpers.testAsync
+const getHtmlRes = helpers.getHtmlRes
 
 /* Tests */
 
@@ -27,6 +30,16 @@ const PossibleBetDbDaTest = () => {
     return betManager.findPossibleBet(TABLES_TO_BET)
 }
 
-exports.tests = () => {
+const ClickMinValueTest = async () => {
+  let browser = await puppeteer.launch();
+  let page = await browser.newPage()
+  await page.setContent(getHtmlRes('casino.html'))
+
+  let result = await betManager.clickMinValue(page, 1)
+  return result
+}
+
+exports.tests = async () => {
     testsync('Possible bet DM DA', BET_DM_DA_EXPECTED, PossibleBetDbDaTest)
+    await testAsync('Click min value', "", ClickMinValueTest)
 }

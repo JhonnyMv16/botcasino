@@ -52,15 +52,14 @@ async function goToHome(page) {
 async function doLogin(page) {
     console.log('Starting login...')
 
-    await page.mouse.click(1648, 66)
-    await utils.sleep(3000)
-    await actions.printScreen(page)
+    await page.mouse.click(1648, 66.5)
+    await utils.sleep(1000)
 
     await page.type('.lms-StandardLogin_Username ', vars.login.username)
     await utils.sleep(1000)
+
     await page.type('.lms-StandardLogin_Password ', vars.login.password)
     await utils.sleep(1000)
-    await actions.printScreen(page)
 
     await page.click('.lms-LoginButton ')
     await utils.sleep(15000)
@@ -99,6 +98,16 @@ async function start() {
         // close casino frame
         let casinoFrame = await actions.findCasinoFrame(page)
         await utils.sleep(20000)
+
+        console.log('Casino aberto!')
+        await actions.printScreen(page)
+
+        await betManager.clickMinValue(casinoFrame, 1)
+        console.log('Click no valor mínimo com o frame')
+        await actions.printScreen(page)
+
+        /*
+
         await actions.closeCasinoLive(casinoFrame)
         await utils.sleep(5000)
 
@@ -109,25 +118,26 @@ async function start() {
 
         // expand tables
         await actions.toggleExpandTables(page)
-        await utils.sleep(3000)
+        await utils.sleep(20000)
         await actions.printScreen(page)
 
         // find possible bets
 
+        var lastEnterTable = ""
         var betFound = 0
 
-        const MAX_BET = 5
+        const MAX_BET = 2
         const TOTAL_VERIFICATIONS = 4000
         const VERIFICATION_DELAY = 1500 // Five seconds
 
-        for (let index = 1; index <= TOTAL_VERIFICATIONS && betFound < MAX_BET; index++) {
+        for (let index = 1; index <= TOTAL_VERIFICATIONS && (betFound < MAX_BET); index++) {
 
             if (index > 1) {
                 await page.keyboard.press('ArrowDown');
 
                 // await for next verification
                 await utils.sleep(VERIFICATION_DELAY)
-                
+
                 await page.keyboard.press('ArrowUp');
             }
 
@@ -137,13 +147,18 @@ async function start() {
             console.log(`Verificação ${index}`)
 
             if (possibleBets.length > 0) {
-                betFound++;
-
                 let possibleBet = possibleBets[0]
-                console.log('\n✨ GO BET ✨ \n')
-                console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
 
-                await betManager.bet(page, casinoFrame, possibleBet)
+                if (lastEnterTable !== possibleBet.name) {
+                    lastEnterTable = possibleBet.name
+                    console.log('\n✨ GO BET ✨ \n')
+                    console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
+
+                    let betRealized = await betManager.bet(page, casinoFrame, possibleBet)
+                    if (betRealized) {
+                        betFound++;
+                    }
+                }
             }
         }
 
@@ -151,12 +166,17 @@ async function start() {
         await utils.sleep(2000)
 
         // logout
-        await actions.logout(page)
-        await utils.sleep(5000)
-        await actions.printScreen(page)
+        //await actions.logout(page)
+        //await utils.sleep(5000)
+        //await actions.printScreen(page)
+
+        */
 
     } catch (e) {
-        console.error(`Error -> ${e.message}`)
+        console.error(`Error -> ${e.message}\n`)
+        console.log('-------------------------')
+        console.log(`\n${e.stack}\n`)
+        console.log('-------------------------')
     } finally {
         // close browser
         await browser.close()

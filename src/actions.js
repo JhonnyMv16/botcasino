@@ -18,6 +18,40 @@ const getBalance = async function (casinoFrame) {
     return await casinoFrame.$eval('.balance__value ', (el) => Number(el.innerText.trim().replace('R$', '').replace(' ', '').replace(', ', '.')))
 }
 
+/* Functions to expose */
+
+const clickXy = function (x, y, count) {
+    var ev = new MouseEvent('click', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true,
+        'screenX': x,
+        'screenY': y
+    });
+
+    var el = document.elementFromPoint(x, y);
+    for (let index = 1; index <= count; index++) {
+        el.dispatchEvent(ev);
+    }
+}
+
+const simulateClick = function (x, y, count = 1) {
+    var clickEvent = document.createEvent('MouseEvents');
+    clickEvent.initMouseEvent(
+        'click', true, true, window, 0,
+        0, 0, x, y, false, false,
+        false, false, 0, null
+    );
+    for (let index = 0; index < count; index++) {
+        document.elementFromPoint(x, y).dispatchEvent(clickEvent);
+    }
+}
+
+exports.exposeFunctions = async function (page) {
+    await page.exposeFunction("clickXy", clickXy)
+    await page.exposeFunction("simulateClick", simulateClick)
+}
+
 exports.printScreen = async function (page) {
     if (vars.enablePrint) {
 
@@ -64,7 +98,7 @@ exports.printLoss = async function (page) {
     print_loss++;
 }
 
-exports.toggleExpandTables = async function expandTables(mainPage) {
+exports.toggleExpandTables = async function (mainPage) {
     console.log('Trying expand/collapse tables..')
     let button = await mainPage.$('.inline-games-page-component__game-header-right ')
 
@@ -97,40 +131,34 @@ exports.clickRouletteTab = async function clickRouletteTab(frame) {
 * this method will retrieve all tables from page
 */
 exports.findTablesToBet = async function (casinoFrame) {
+    return  await casinoFrame.evaluate(_ => {
+        let tablesElements = document.querySelectorAll('.lobby-table__container')
+        let tables = []
+        for (let index = 0; index < tablesElements.length; index++) {
 
-    let tables = await casinoFrame.$$('.lobby__container .lobby-tables__item .lobby-table__wrapper')
-    let result = await Promise.all(
-        tables.map(async (table, index) => {
-            let className = await table.evaluate(e => e.className)
-            let name = await table.$eval('.lobby-table__name-container', el => el.innerText.trim())
-            let minMax = await table.$eval('.lobby-table__limits', el => el.innerText.trim())
-            let historyContainerList = await table.$$('.lobby-table__container > div:nth-child(4) > div')
+            let table = tablesElements[index]
+            let name = table.querySelector('.lobby-table__name-container').textContent
+            var min = table.querySelector('.lobby-table-limits__min').textContent
 
-            let inlineMinMax = minMax.replace('R$', '').replace(/(\r\n|\n|\r)/gm, "").replace('- ', '-').replace(' ', '')
-            let min = inlineMinMax.split('-')[0]
-            let max = inlineMinMax.split('-')[1]
+            min = min.replace('R$', '').replace(' ', '').replace(',', '.').trim()
 
-            let history = []
+            min = Number(min)
 
-            for (let h of historyContainerList) {
-                let divs = await h.$$('div')
-                for (let div of divs) {
-                    let object = await div.evaluate(e => {
-                        let value = Number(e.innerText.trim())
-                        return { class: e.className, value }
-                    })
+            if (min === 2.5 && name !== 'Spread Bet Roulette') {
+                let historyElements = table.querySelectorAll('div:first-child > div:nth-child(5) > div')
 
-                    if (object.class.includes('roulette-history-item__value-')) {
-                        history.push(object.value)
-                    }
+                let history = []
+                for (let index = 0; index < historyElements.length; index++) {
+                    let result = historyElements[index].textContent.split('x')[0]
+                    history.push(Number(result))
                 }
+    
+                let object = { name, min, history, index } 
+                tables.push(object)
             }
-
-            return { name, min, max, history, className, index }
-        })
-    )
-
-    return result
+        }
+        return tables
+    })
 }
 
 exports.findCasinoFrame = async function (page) {
@@ -190,7 +218,7 @@ exports.getBalance = getBalance
 
 exports.openTable = async function (casinoFrame, table) {
     console.log(`Opening table ${table.name}..`)
-    let elements = await casinoFrame.$$('.lobby-tables__item .lobby-table__wrapper .lobby-table .lobby-table__container')
+    let elements = await casinoFrame.$$('.lobby-table__container')
     let tableEl = elements[table.index]
     await tableEl.click()
 }
@@ -214,25 +242,25 @@ exports.getTableBetPoints = async function (casinoFrame) {
     }
 
     async function findDozens() {
-       var elements = await casinoFrame.$x('//*[contains(text(), "1st 12")]')
-       let db = await elements[0].evaluate(e => {
-           let rect = e.getBoundingClientRect()
-           return { name: 'Dúzia baixa', x: rect.x, y: rect.y }
-       })
+        var elements = await casinoFrame.$x('//*[contains(text(), "1st 12")]')
+        let db = await elements[0].evaluate(e => {
+            let rect = e.getBoundingClientRect()
+            return { name: 'Dúzia baixa', x: rect.x, y: rect.y }
+        })
 
-       elements = await casinoFrame.$x('//*[contains(text(), "2nd 12")]')
-       let dm = await elements[0].evaluate(e => {
-           let rect = e.getBoundingClientRect()
-           return { name: 'Dúzia média', x: rect.x, y: rect.y }
-       })
+        elements = await casinoFrame.$x('//*[contains(text(), "2nd 12")]')
+        let dm = await elements[0].evaluate(e => {
+            let rect = e.getBoundingClientRect()
+            return { name: 'Dúzia média', x: rect.x, y: rect.y }
+        })
 
-       elements = await casinoFrame.$x('//*[contains(text(), "3rd 12")]')
-       let da = await elements[0].evaluate(e => {
-           let rect = e.getBoundingClientRect()
-           return { name: 'Dúzia alta', x: rect.x, y: rect.y }
-       })
-    
-       return { db, dm, da }
+        elements = await casinoFrame.$x('//*[contains(text(), "3rd 12")]')
+        let da = await elements[0].evaluate(e => {
+            let rect = e.getBoundingClientRect()
+            return { name: 'Dúzia alta', x: rect.x, y: rect.y }
+        })
+
+        return { db, dm, da }
     }
 
 
@@ -253,12 +281,11 @@ exports.getTableState = async function (casinoFrame) {
     var canBet = false
 
     try {
-        canBet = await casinoFrame.$eval('span.dealer-message-text', el => el.innerText.includes('FAÇA AS SUAS APOSTAS'))   
+        canBet = await casinoFrame.$eval('span.dealer-message-text', el => el.innerText.includes('FAÇA AS SUAS APOSTAS'))
     } catch (error) {
-        console.log('Try get can bet error')
-        canBet = await casinoFrame.evaluate( _ => {
+        canBet = await casinoFrame.evaluate(_ => {
             return (document.documentElement.textContent || document.documentElement.innerText).indexOf('FAÇA AS SUAS APOSTAS') > -1
-        })    
+        })
     }
 
     let historyStr = await casinoFrame.$eval('.roulette-game-area__history-line', el => el.innerText)

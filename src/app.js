@@ -7,6 +7,10 @@ const vars = require('./vars.js')
 const fs = require('fs')
 const puppeteer = require('puppeteer')
 
+const INITAL_CASINO = "bet365 Roulette"
+
+var isExpand = false
+
 async function createBrowser() {
     return await puppeteer.launch()
 }
@@ -46,7 +50,6 @@ async function goToHome(page) {
     await page.waitForXPath('//*[contains(text(), "Login")]', { timeout: 0 })
     await utils.sleep(5000)
     console.log('Home opened!')
-    await actions.printScreen(page)
 }
 
 async function doLogin(page) {
@@ -66,15 +69,38 @@ async function doLogin(page) {
     await saveCookies(page)
 
     console.log('Login realized!\n')
-    await actions.printScreen(page)
 }
 
 async function goToCasinoLive(page) {
     console.log('Opening casino live...')
     await page.goto('https://casino.bet365.com/Play/LiveRoulette')
     await page.waitForXPath('//*[contains(text(), "Live Roulette ")]', { timeout: 0 })
-    await utils.sleep(10000)
+    await utils.sleep(20000)
     console.log('Casino opened!\n')
+}
+
+async function logout(page) {
+    if (isExpand) {
+        await toggleExpand(page)
+    }
+
+    await betManager.clickHeaderAccount(page)
+    await utils.sleep(5000)
+    console.log('Click account header')
+    await actions.printScreen(page)
+
+    await betManager.clickMenuExit(page)
+    await utils.sleep(5000)
+    console.log('Click exit')
+    await actions.printScreen(page)
+}
+
+async function toggleExpand(page) {
+    console.log('toggleExpandTables')
+    await actions.printScreen(page)
+    await actions.toggleExpandTables(page)
+    await utils.sleep(2000)
+    isExpand = !isExpand
 }
 
 async function start() {
@@ -84,99 +110,134 @@ async function start() {
 
     try {
 
-        /// open home
+        await actions.exposeFunctions(page)
+
         await goToHome(page)
 
-        // do login
+        console.log('printScreen')
+        await actions.printScreen(page)
         await doLogin(page)
 
-        // open casino
-        await goToCasinoLive(page)
-        await utils.sleep(2000)
+        console.log('goToCasinoLive')
         await actions.printScreen(page)
+        await goToCasinoLive(page)
 
-        // close casino frame
+        // close initial casino frame
+        console.log('findCasinoFrame')
+        await actions.printScreen(page)
         let casinoFrame = await actions.findCasinoFrame(page)
         await utils.sleep(20000)
 
-        console.log('Casino aberto!')
+        // close info dialog
+        console.log('clickAnnouncementButton')
+        await actions.printScreen(page)
+        await betManager.clickAnnouncementButton(page, casinoFrame)
+        await utils.sleep(2000)
+
+        console.log('clickMinValue')
+        await betManager.clickMinValue(casinoFrame)
+        await utils.sleep(2000)
         await actions.printScreen(page)
 
-        await betManager.clickMinValue(casinoFrame, 1)
-        console.log('Click no valor mínimo com o frame')
+        console.log('closeCasinoLive')
         await actions.printScreen(page)
-
-        /*
-
         await actions.closeCasinoLive(casinoFrame)
         await utils.sleep(5000)
 
         // click roulette 
-        await actions.clickRouletteTab(casinoFrame)
-        await utils.sleep(3000)
+        console.log('clickRouletteTab')
         await actions.printScreen(page)
+        await actions.clickRouletteTab(casinoFrame)
+        await utils.sleep(2000)
 
         // expand tables
-        await actions.toggleExpandTables(page)
-        await utils.sleep(20000)
-        await actions.printScreen(page)
+        await toggleExpand(page)
+
+        // check balance
+        let balance = await actions.getBalance(casinoFrame)
+        console.log(`\nSaldo ${balance}\n`)
+
+        let hasBalance = Number(balance) > 20
+        if (hasBalance === false) {
+            await logout(page)
+            return
+        }
 
         // find possible bets
-
-        var lastEnterTable = ""
+        var lastEnterTable = INITAL_CASINO
         var betFound = 0
 
-        const MAX_BET = 2
-        const TOTAL_VERIFICATIONS = 4000
+        const MAX_BET = 5
+        const TOTAL_VERIFICATIONS = 1000
         const VERIFICATION_DELAY = 1500 // Five seconds
 
-        for (let index = 1; index <= TOTAL_VERIFICATIONS && (betFound < MAX_BET); index++) {
+        for (var index = 1; index <= TOTAL_VERIFICATIONS && (betFound < MAX_BET); index++) {
 
-            if (index > 1) {
-                await page.keyboard.press('ArrowDown');
-
-                // await for next verification
-                await utils.sleep(VERIFICATION_DELAY)
-
-                await page.keyboard.press('ArrowUp');
-            }
+            await page.keyboard.press('ArrowDown')
+            await utils.sleep(VERIFICATION_DELAY) // await for next verification
+            await page.keyboard.press('ArrowUp')
 
             let tables = await actions.findTablesToBet(casinoFrame)
             let possibleBets = betManager.findPossibleBet(tables)
+            let hasPossibleBet = possibleBets.length > 0
 
-            console.log(`Verificação ${index}`)
+            console.log(`Verificação ${index}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
 
-            if (possibleBets.length > 0) {
-                let possibleBet = possibleBets[0]
+            if (hasPossibleBet) {
 
-                if (lastEnterTable !== possibleBet.name) {
-                    lastEnterTable = possibleBet.name
-                    console.log('\n✨ GO BET ✨ \n')
-                    console.log(`Mesa: ${possibleBet.name}, aposta: ${possibleBet.bet}\n`)
+                let randomBet = Math.floor(Math.random() * possibleBets.length)
+                let possibleBet = possibleBets[randomBet]
 
-                    let betRealized = await betManager.bet(page, casinoFrame, possibleBet)
-                    if (betRealized) {
-                        betFound++;
+                try {
+                    if (lastEnterTable !== possibleBet.name) {
+                        lastEnterTable = possibleBet.name
+
+                        let balance = await actions.getBalance(casinoFrame)
+                        if (Number(balance) < 20) {
+                            console.error('Erro -> Saldo insuficiente para realizar aposta!\n')
+                            await utils.sleep(5000)
+                            return
+                        }
+
+                        console.log('\n✨ GO BET ✨ \n')
+                        console.log(`Mesa: ${possibleBet.name}\nAposta: ${possibleBet.bet}`)
+                        console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
+
+                        let betRealized = await betManager.bet(page, casinoFrame, possibleBet)
+
+                        if (betRealized) {
+                            betFound += 1;
+
+                            console.log('Aposta finalizada')
+                            await utils.sleep(2000)
+
+                            let balance = await actions.getBalance(casinoFrame)
+                            console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
+
+                            await actions.printScreen(page)
+
+                            console.log(`Apostas realizadas: ${betFound}\n`)
+                        }
+                    } else {
+                        console.log(`Não é possível seguir para aposta na mesma roleta ${lastEnterTable}`)
                     }
+                    
+                } catch (e) {
+                    console.error(`Error na tentativa de aposta-> ${e.message}\n`)
+                    console.log('-------------------------')
+                    console.log(`\n${e.stack}\n`)
+                    console.log('-------------------------')
                 }
             }
         }
 
-        await actions.toggleExpandTables(page)
-        await utils.sleep(2000)
-
-        // logout
-        //await actions.logout(page)
-        //await utils.sleep(5000)
-        //await actions.printScreen(page)
-
-        */
-
+        await logout(page)
     } catch (e) {
         console.error(`Error -> ${e.message}\n`)
         console.log('-------------------------')
         console.log(`\n${e.stack}\n`)
         console.log('-------------------------')
+        await actions.printScreen(page)
     } finally {
         // close browser
         await browser.close()

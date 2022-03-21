@@ -1,4 +1,5 @@
 const actions = require('../src/actions.js')
+const betManager = require('../src/bet_manager.js')
 const betManagerTests = require('./bet_manager_test.js')
 const constants = require('./utils/test_constants.js')
 const helpers = require('./utils/test_helpers.js')
@@ -23,6 +24,7 @@ const FindTablesToBetTest = async () => {
     await page.setContent(getHtmlRes('loob.html'))
 
     let result = await actions.findTablesToBet(page)
+    console.log(`possible bet count ${betManager.findPossibleBet(result).length}`)
     await browser.close()
     return result
 }
@@ -51,10 +53,10 @@ const TableBetPointsTest = async () => {
 
 (async () => {
 
-  //  await testAsync('Find tables to bet', TABLES_TO_BET, FindTablesToBetTest)
-  //  await testAsync('Table state', TABLE_STATE_DEFAULT, TableStateTest)
-  //  await testAsync('Table bet points', TABLE_BET_POINTS, TableBetPointsTest)
-
+    await testAsync('Find tables to bet', TABLES_TO_BET, FindTablesToBetTest)
+    await testAsync('Table state', TABLE_STATE_DEFAULT, TableStateTest)
+    await testAsync('Table bet points', TABLE_BET_POINTS, TableBetPointsTest)
+    
     betManagerTests.tests()
 
 })();

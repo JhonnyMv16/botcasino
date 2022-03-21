@@ -6,9 +6,7 @@ const TABLES_TO_BET = [
       history: [
         24, 36, 6, 36, 24,
          8, 27, 0,  6, 15
-      ],
-      className: 'lobby-table__wrapper',
-      index: 0
+      ]
     },
     {
       name: 'Roulette',
@@ -17,9 +15,7 @@ const TABLES_TO_BET = [
       history: [
         3,  1,  3,  1, 11,
         4, 25, 35, 17, 13
-      ],
-      className: 'lobby-table__wrapper',
-      index: 1
+      ]
     }
 ]
 
@@ -43,8 +39,18 @@ const TABLE_BET_POINTS = {
     minBtn: { name: 'Botão 2.5', x: 606.65625, y: 513.4813232421875 }
 }
 
+const BET_DM_DA_EXPECTED = [
+  {
+    name: 'Roulette',
+    bet: 'Dúzia média e dúzia alta',
+    code: 'DM_DA',
+    history: [3, 1, 3, 1, 11, 4]
+  }
+]
+
 module.exports = {
     TABLES_TO_BET,
     TABLE_STATE_DEFAULT,
-    TABLE_BET_POINTS
+    TABLE_BET_POINTS,
+    BET_DM_DA_EXPECTED
 }

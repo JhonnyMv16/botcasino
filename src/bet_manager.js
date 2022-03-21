@@ -30,27 +30,15 @@ const BET_C1_C3 = 'BET_C1_C3'
 /**
  * total bet history to slice verifier
  */
-const BET_SLICE = 6
+const BET_SLICE = 5
 
-function canBetInDUZIA(duzia, history) {
+function canBet(duzia, history) {
     let lastResults = history.slice(0, BET_SLICE)
     let canBet = true
 
     lastResults.forEach(item => {
         if (!canBet) return
         canBet = duzia.includes(item)
-    })
-
-    return canBet
-}
-
-function canBetInCOLUMN(column, history) {
-    let lastResults = history.slice(0, BET_SLICE)
-    let canBet = true
-
-    lastResults.forEach(item => {
-        if (!canBet) return
-        canBet = column.includes(item)
     })
 
     return canBet
@@ -63,245 +51,390 @@ exports.betCodes = {
 }
 
 const findPossibleBet = function (tables) {
-    // console.log('Verificando possibilidade de aposta..\n')
     let tablesToBet = []
 
     tables.forEach(table => {
         let name = table.name
-        let history = table.history.slice(0, BET_SLICE)
-        let className = table.className
         let index = table.index
 
-        if (table.min !== '2.50') {
-            // skip tables
+        if (table.history.length <= BET_SLICE) {
+            console.log(`Histórico não encontrado, mesa ${name}, history: ${table.history}`)
             return
         }
-        // check duzias
-        else if (canBetInDUZIA(dG, table.history)) {
-            let bet = 'Dúzia baixa e dúzia média'
-            let code = DB_DM
-            tablesToBet.push({ name, bet, code, history, className, index })
-        }
 
-        else if (canBetInDUZIA(dM, table.history)) {
-            let bet = 'Dúzia baixa e dúzia alta'
-            let code = DB_DA
-            tablesToBet.push({ name, bet, code, history, className, index })
-        }
+        let history = table.history.slice(0, BET_SLICE)
 
-        else if (canBetInDUZIA(dB, table.history)) {
-            let bet = 'Dúzia média e dúzia alta'
-            let code = DM_DA
-            tablesToBet.push({ name, bet, code, history, className, index })
-        }
-
-        // check columns
-        else if (canBetInCOLUMN(cOne, table.history)) {
-            let bet = 'Coluna 2 e coluna 3'
-            let code = BET_C2_C3
-            tablesToBet.push({ name, bet, code, history, className, index })
-        }
-
-        else if (canBetInCOLUMN(cTwo, table.history)) {
-            let bet = 'Coluna 1 e coluna 3'
-            let code = BET_C1_C3
-            tablesToBet.push({ name, bet, code, history, className, index })
-        }
-
-        else if (canBetInCOLUMN(cThree, table.history)) {
-            let bet = 'Coluna 1 e coluna 2'
-            let code = BET_C1_C2
-            tablesToBet.push({ name, bet, code, history, className, index })
+        if (table.min === 2.50) {
+            if (canBet(dG, table.history)) {
+                let bet = 'Dúzia baixa e dúzia média'
+                let code = DB_DM
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(dM, table.history)) {
+                let bet = 'Dúzia baixa e dúzia alta'
+                let code = DB_DA
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(dB, table.history)) {
+                let bet = 'Dúzia média e dúzia alta'
+                let code = DM_DA
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cOne, table.history)) {
+                let bet = 'Coluna 2 e coluna 3'
+                let code = BET_C2_C3
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cTwo, table.history)) {
+                let bet = 'Coluna 1 e coluna 3'
+                let code = BET_C1_C3
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cThree, table.history)) {
+                let bet = 'Coluna 1 e coluna 2'
+                let code = BET_C1_C2
+                tablesToBet.push({ name, bet, code, history, index })
+            }
         }
     })
 
     return tablesToBet
 }
 
-async function clickAt(page, x, y, count) {
-    return await Promise.all([
-        page.mouse.click(x, y, { clickCount: count }),
-        utils.sleep(300)
-    ])
-}
+async function clickMinValue(frame) {
+    await frame.evaluate(_ => {
+        let element = document.querySelector('.chip.arrow-slider__element')
+        let rect = element.getBoundingClientRect()
 
-async function clickAtFrame(frame, count=1, elementSelector) {
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
 
-
-    return await frame.evaluate((count) => {
-        var el = document.querySelectorAll('.chip-animation-wrapper')[0]
-        let rect = el.getBoundingClientRect()
-        clickXy(rect.x, rect.y, count)
-    }, count)
-}
-
-async function exposeFunction(frame) {
-    return await frame.exposeFunction("clickXy", function click(x, y, count){
-        var ev = new MouseEvent('click', {
-            'view': window,
-            'bubbles': true,
-            'cancelable': true,
-            'screenX': x,
-            'screenY': y
-        });
-
-        var el = document.elementFromPoint(x, y);
-        for (let index = 1; index <= count; index++) {
-            el.dispatchEvent(ev);        
-        }
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
     })
 }
 
-async function clickMinValue(frame, count) {
-    await exposeFunction(frame)
+async function clickLowDozen(frame, count) {
     return await frame.evaluate((count) => {
-        var el = document.querySelectorAll('.chip-animation-wrapper')[0]
-        let rect = el.getBoundingClientRect()
-        clickXy(rect.x, rect.y, count)
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        var element = undefined
+
+        for (let index = 0; index < elements.length; index++) {
+            let el = elements[index]
+            if (el.textContent.includes("1st 12")) {
+                element = el
+            }
+        }
+
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y + 10, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);   
+        }
     }, count)
 }
 
-async function clickLowDozen(page, count) {
-    return await clickAt(page, 667.5, 736.4, count)
+async function clickMediumDozen(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        var element = undefined
+
+        for (let index = 0; index < elements.length; index++) {
+            let el = elements[index]
+            if (el.textContent.includes("2nd 12")) {
+                element = el
+            }
+        }
+
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y + 10, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);   
+        }
+    }, count)
 }
 
-async function clickMediumDozen(page, count) {
-    return await clickAt(page, 832.7, 736.4, count)
+async function clickHighDozen(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        var element = undefined
+
+        for (let index = 0; index < elements.length; index++) {
+            let el = elements[index]
+            if (el.textContent.includes("3rd 12")) {
+                element = el
+            }
+        }
+
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y + 10, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);   
+        }
+    }, count)
 }
 
-async function clickHighDozen(page, count) {
-    return await clickAt(page, 1002.22, 736.4, count)
+async function clickColOne(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        let filtered = []
+
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (element.textContent.includes("2to1")) {
+                filtered.push(element)
+            }
+        }
+
+        var element = filtered[2]
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+    }, count)
 }
 
-async function clickColOne(page, count) {
-    return await clickAt(page, 1114.4, 696.4, count)
+async function clickColTwo(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        let filtered = []
+
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (element.textContent.includes("2to1")) {
+                filtered.push(element)
+            }
+        }
+
+        var element = filtered[1]
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+    }, count)
 }
 
-async function clickColTwo(page, count) {
-    return await clickAt(page, 1114.4, 654.6, count)
+async function clickColThree(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        let filtered = []
+
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (element.textContent.includes("2to1")) {
+                filtered.push(element)
+            }
+        }
+
+        var element = filtered[0]
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+    }, count)
 }
 
-async function clickColThree(page, count) {
-    return await clickAt(page, 1114.4, 612.8, count)
+async function clickHeaderAccount(page) {
+    await page.click('div.members-dropdown-component__members-icon-container')
+}
+
+async function clickMenuExit(page) {
+    await page.click('div.members-dropdown-component__log-out-link')
+}
+
+async function clickAnnouncementButton(page, casinoFrame) {
+    let btn = await page.$('button.important-announcement__button')
+    if (btn) {
+        console.log('Dialog 1 exists')
+        await btn.click()
+    }
+
+    let btnCasino = await casinoFrame.$('button.important-announcement__button')
+    if (btnCasino) {
+        console.log('Dialog casino 1 exists')
+        await btnCasino.click()
+    }
+
+    await utils.sleep(500)
+
+    let btn2 = await page.$('button.overlay-banner__close-button')
+    if (btn2) {
+        console.log('Dialog 2 exists')
+        await btn2.click()
+    }
+}
+
+function isBetGreen(betCode, number) {
+    var result = false
+
+    switch (betCode) {
+        case DB_DM: {
+            result = (dB.includes(number) || dM.includes(number))
+            break;
+        }
+        case DM_DA: {
+            result = (dM.includes(number) || dG.includes(number))
+            break;
+        }
+        case DB_DA: {
+            result = (dB.includes(number) || dG.includes(number))
+            break;
+        }
+        case BET_C1_C2: {
+            result = (cOne.includes(number) || cTwo.includes(number))
+            break;
+        }
+        case BET_C2_C3: {
+            result = (cTwo.includes(number) || cThree.includes(number))
+            break;
+        }
+        case BET_C1_C3: {
+            result = (cOne.includes(number) || cThree.includes(number))
+            break;
+        }
+    }
+
+    return result
 }
 
 const bet = async function (page, casinoFrame, table) {
     return new Promise(async (resolve, reject) => {
         try {
+
             await actions.openTable(casinoFrame, table)
             await utils.sleep(4000)
             await actions.printScreen(page)
-      
+
             await actions.closeBetModal(casinoFrame)
-    
-            let balance = await actions.getBalance(casinoFrame)
-    
-            console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
-    
-            if (Number(balance) < 20) {
-                console.error('Erro -> Saldo insuficiente para realizar aposta!\n')
-                await utils.sleep(30000)
-                await actions.closeCasinoLive(casinoFrame)
-                resolve(false)
-                return
-            }
-    
+
             let state = await actions.getTableState(casinoFrame)
             let xHistory = table.history.slice(0, BET_SLICE)
             let yHistory = state.history.slice(0, BET_SLICE)
-    
+
             if (JSON.stringify(xHistory) !== JSON.stringify(yHistory)) {
                 console.error('Erro -> Divergencia encontrada no histórico da mesa!\n')
                 console.log(xHistory)
                 console.log(yHistory)
                 console.log('\n')
-                await utils.sleep(30000)
+                await utils.sleep(15000)
                 await actions.closeCasinoLive(casinoFrame)
                 resolve(false)
                 return
             }
-    
+
             if (!state.canBet) {
                 console.error('Erro -> O casino não está em periodo de aposta!\n')
                 await actions.printScreen(page)
-                await utils.sleep(30000)
+                await utils.sleep(15000)
                 await actions.closeCasinoLive(casinoFrame)
                 resolve(false)
                 return
             }
-    
+
             const MAX_ATTEMTPS = 2
-    
+
             var currentState = state
-            var isResultGreen = false 
+            var isResultGreen = false
             var resultNumber = 0
-    
-            await clickMinValue(page, 1)
+
+            console.log('Click no valor mínimo')
+            await clickMinValue(casinoFrame)
+            await utils.sleep(1000)
             await actions.printScreen(page)
-    
+
             for (let attempts = 1; attempts <= MAX_ATTEMTPS && !isResultGreen; attempts++) {
-                
+
                 console.log(`Tentativa ${attempts}\n`)
-    
+
                 var clicksToBet = 1
-    
+
                 if (attempts === 2) {
                     clicksToBet = 3
                 }
-    
+
                 switch (table.code) {
                     case DB_DM: {
-                        await clickLowDozen(page, clicksToBet)
-                        await clickMediumDozen(page, clicksToBet)
+                        await clickLowDozen(casinoFrame, clicksToBet)
+                        await clickMediumDozen(casinoFrame, clicksToBet)
                         break;
                     }
                     case DM_DA: {
-                        await clickMediumDozen(page, clicksToBet)
-                        await clickHighDozen(page, clicksToBet)
+                        await clickMediumDozen(casinoFrame, clicksToBet)
+                        await clickHighDozen(casinoFrame, clicksToBet)
                         break;
                     }
                     case DB_DA: {
-                        await clickLowDozen(page, clicksToBet)
-                        await clickHighDozen(page, clicksToBet)
+                        await clickLowDozen(casinoFrame, clicksToBet)
+                        await clickHighDozen(casinoFrame, clicksToBet)
                         break;
                     }
                     case BET_C1_C2: {
-                        await clickColOne(page, clicksToBet)
-                        await clickColTwo(page, clicksToBet)
+                        await clickColOne(casinoFrame, clicksToBet)
+                        await clickColTwo(casinoFrame, clicksToBet)
                         break;
                     }
                     case BET_C2_C3: {
-                        await clickColTwo(page, clicksToBet)
-                        await clickColThree(page, clicksToBet)
+                        await clickColTwo(casinoFrame, clicksToBet)
+                        await clickColThree(casinoFrame, clicksToBet)
                         break;
                     }
                     case BET_C1_C3: {
-                        await clickColOne(page, clicksToBet)
-                        await clickColThree(page, clicksToBet)
+                        await clickColOne(casinoFrame, clicksToBet)
+                        await clickColThree(casinoFrame, clicksToBet)
                         break;
                     }
                 }
 
-                console.log('Aposta feita!')
+                console.log('Aposta realizada!')
+                await utils.sleep(2000)
                 await actions.printScreen(page)
-    
+
                 var finishedRound = false
                 while (!finishedRound) {
                     await utils.sleep(2000)
-    
-                    console.log('Get Table State')
-                    await actions.printScreen(page)
+
                     let newState = await actions.getTableState(casinoFrame)
                     resultNumber = newState.history[0]
                     finishedRound = currentState.history[0] !== resultNumber
-    
+
                     if (finishedRound) {
-                        isResultGreen = newState.balance > currentState.balance
+                        isResultGreen = isBetGreen(table.code, resultNumber)
                         currentState = newState
                     }
                 }
             }
-    
+
             if (isResultGreen) {
                 console.log(`${resultNumber} GREEN ✔️\n`)
                 await actions.printGreen(page)
@@ -309,13 +442,11 @@ const bet = async function (page, casinoFrame, table) {
                 console.log(`${resultNumber} LOSS ❌\n`)
                 await actions.printLoss(page)
             }
-    
-            console.log('Finish bet')
-            console.log(`Saldo atual: R$ ${balance}\n`.replace('.', ','))
-            await actions.printScreen(page)
+
+            await actions.closeCasinoLive(casinoFrame)
 
             resolve(true)
-        }catch(e){
+        } catch (e) {
             reject(e)
         }
     })
@@ -324,5 +455,14 @@ const bet = async function (page, casinoFrame, table) {
 module.exports = {
     findPossibleBet,
     bet,
-    clickMinValue
+    clickMinValue,
+    clickLowDozen,
+    clickMediumDozen,
+    clickHighDozen,
+    clickColOne,
+    clickColTwo,
+    clickColThree,
+    clickHeaderAccount,
+    clickMenuExit,
+    clickAnnouncementButton
 }

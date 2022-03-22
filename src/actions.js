@@ -186,6 +186,7 @@ exports.getTableState = async function (casinoFrame) {
     var canBet = false
 
     try {
+        await casinoFrame.waitForSelector('span.dealer-message-text')
         canBet = await casinoFrame.$eval('span.dealer-message-text', el => el.innerText.includes('FAÇA AS SUAS APOSTAS'))
     } catch (error) {
         canBet = await casinoFrame.evaluate(_ => {

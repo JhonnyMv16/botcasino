@@ -190,7 +190,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
             continue
         }
 
-        let betRealized = await betManager.bet(page, casinoFrame, possibleBet)
+        let betRealized = await betManager.bet(page, casinoFrame, possibleBet, config)
 
         if (betRealized) {
             betRealized += 1;

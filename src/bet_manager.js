@@ -43,30 +43,30 @@ const findPossibleBet = function (tables, config) {
             return
         }
 
-        let history = table.history.slice(0, config.criterion)
+        let history = table.history
 
         if (table.min === 2.50) {
-            if (canBet(dG, table.history, config.criterion)) {
+            if (canBet(dG, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia média'
                 let code = DB_DM
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dM, table.history, config.criterion)) {
+            } else if (canBet(dM, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia alta'
                 let code = DB_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dB, table.history, config.criterion)) {
+            } else if (canBet(dB, history, config.criterion)) {
                 let bet = 'Dúzia média e dúzia alta'
                 let code = DM_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cOne, table.history, config.criterion)) {
+            } else if (canBet(cOne, history, config.criterion)) {
                 let bet = 'Coluna 2 e coluna 3'
                 let code = BET_C2_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cTwo, table.history, config.criterion)) {
+            } else if (canBet(cTwo, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 3'
                 let code = BET_C1_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cThree, table.history, config.criterion)) {
+            } else if (canBet(cThree, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 2'
                 let code = BET_C1_C2
                 tablesToBet.push({ name, bet, code, history, index })
@@ -423,7 +423,7 @@ async function executeBet(page, casinoFrame, table, state) {
     await actions.printBalance(casinoFrame)
 }
 
-const bet = async function (page, casinoFrame, table) {
+const bet = async function (page, casinoFrame, table, config) {
     var betRealized = false
 
     console.log('\n✨ GO BET ✨ \n')
@@ -435,9 +435,11 @@ const bet = async function (page, casinoFrame, table) {
 
     let state = await actions.getTableState(casinoFrame)
 
-    if (hasErrorInState(state, table) === false) {
+    if (hasErrorInState(state, table, config.criterion) === false) {
         await executeBet(page, casinoFrame, table, state)
         betRealized = true
+    } else {
+        await utils.sleep(10000)
     }
 
     await actions.printScreen(page)

@@ -2,7 +2,7 @@ const readline = require('readline');
 const utils = require('./utils.js')
 
 const DEFAULT_MAX_BETS = 5
-const DEFAULT_VERIFICATIONS = 1500
+const DEFAULT_VERIFICATIONS = 500
 const DEFAULT_MIN_BALANCE = 5
 const DEFAULT_CRITERION = 5
 

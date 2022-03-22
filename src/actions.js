@@ -175,10 +175,11 @@ exports.closeCasinoLive = async function (casinoFrame) {
 
 exports.openTable = async function (casinoFrame, table) {
     console.log(`Opening table ${table.name}..`)
+    await casinoFrame.waitForSelector('.lobby-table__container')
     let elements = await casinoFrame.$$('.lobby-table__container')
     let tableEl = elements[table.index]
     await tableEl.click()
-    await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]')
+    await casinoFrame.waitForSelector('span.dealer-message-text')
 }
 
 exports.getTableState = async function (casinoFrame) {
@@ -192,6 +193,7 @@ exports.getTableState = async function (casinoFrame) {
         })
     }
 
+    await casinoFrame.waitForSelector('.roulette-game-area__history-line')
     let historyStr = await casinoFrame.$eval('.roulette-game-area__history-line', el => el.innerText)
     let history = historyStr.split('\n').map(value => Number(value))
     let balance = await getBalance(casinoFrame)

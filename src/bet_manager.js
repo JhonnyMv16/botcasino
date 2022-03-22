@@ -408,6 +408,11 @@ async function executeBet(page, casinoFrame, table, state) {
 
             isResultGreen = isBetGreen(table.code, resultNumber)
         }
+
+        if (!isResultGreen) {
+            // wait some time for next bet
+            await utils.sleep(2000)
+        }
     }
 
     if (isResultGreen) {
@@ -419,7 +424,7 @@ async function executeBet(page, casinoFrame, table, state) {
     }
 
     console.log('Aposta finalizada!')
-    await utils.sleep(2000)
+    await utils.sleep(5000)
     await actions.printBalance(casinoFrame)
 }
 

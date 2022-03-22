@@ -32,7 +32,7 @@ exports.getBalance = getBalance
 
 exports.printBalance = async function (casinoFrame) {
     let balance = await findBalanceStr(casinoFrame)
-    console.log(`Saldo ${balance}`)
+    console.log(`Saldo ${balance}\n`)
 }
 
 exports.printScreen = async function (page) {
@@ -139,22 +139,19 @@ exports.findCasinoFrame = async function (page) {
     let rouletteFrame = frames.find(f => f.url() === 'https://casino.bet365.com/Play/LiveRoulette')
 
     if (!rouletteFrame) {
-        console.error('Error -> Frame roulette live not found!\n')
-        process.exit(0)
+        throw Error("Frame roulette live not found")
     }
 
     let gamingFrame = rouletteFrame.childFrames().find(f => f.url().includes('https://www.sgla365.com/GamingLaunch'))
 
     if (!gamingFrame) {
-        console.error('Error -> Frame gaming launch not found!\n')
-        process.exit(0)
+        throw Error("Frame gaming launch not found")
     }
 
     let casinoFrame = gamingFrame.childFrames().find(f => f.name() === 'gamecontent')
 
     if (!casinoFrame) {
-        console.error('Error -> Frame casino client not found!\n')
-        process.exit(0)
+        throw Error("Frame casino client not found")
     }
 
     return casinoFrame

@@ -12,7 +12,7 @@ const VERIFICATION_DELAY = 1500
 
 var lastEnterTable = INITAL_CASINO
 var isExpand = false
-var betRealized = 0
+var betRealizedCount = 0
 
 async function createBrowser() {
     return await puppeteer.launch()
@@ -145,7 +145,7 @@ function printBalance(balance) {
 }
 
 function shouldContinueVerification(verifications, config) {
-    return verifications < config.verifications && (betRealized < config.maxBets)
+    return verifications < config.verifications && (betRealizedCount < config.maxBets)
 }
 
 function printError(e) {
@@ -190,11 +190,11 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
             continue
         }
 
-        let betRealized = await betManager.bet(page, casinoFrame, possibleBet, config)
+        let isBetRealized = await betManager.bet(page, casinoFrame, possibleBet, config)
 
-        if (betRealized === true) {
-            betRealized += 1;
-            console.log(`Apostas realizadas: ${betRealized}\n`)
+        if (isBetRealized) {
+            betRealizedCount += 1;
+            console.log(`Apostas realizadas: ${betRealizedCount}\n`)
         }
     }
 }

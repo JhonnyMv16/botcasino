@@ -4,6 +4,7 @@ const utils = require('./utils.js')
 const DEFAULT_MAX_BETS = 5
 const DEFAULT_VERIFICATIONS = 1500
 const DEFAULT_MIN_BALANCE = 5
+const DEFAULT_CRITERION = 5
 
 const reader = readline.createInterface({
     input: process.stdin,
@@ -15,7 +16,7 @@ const ask = (question) => new Promise(resolve => {
 })
 
 async function askMaxBets() {
-    let answer = await ask("Máximo de apostas? (5) \n")
+    let answer = await ask(`Máximo de apostas? (${DEFAULT_MAX_BETS}) \n`)
 
     if (answer === "") {
         return DEFAULT_MAX_BETS
@@ -25,10 +26,20 @@ async function askMaxBets() {
 }
 
 async function askVerifications() {
-    let answer = await ask("Quantas verificações? (1500)\n")
+    let answer = await ask(`Quantas verificações? (${DEFAULT_VERIFICATIONS})\n`)
 
     if (answer === "") {
         return DEFAULT_VERIFICATIONS
+    }
+
+    return Number(answer)
+}
+
+async function askBetCriterion() {
+    let answer = await ask(`Critério de aposta? (${DEFAULT_CRITERION}) \n`)
+
+    if (answer === "") {
+        return DEFAULT_CRITERION
     }
 
     return Number(answer)
@@ -62,11 +73,12 @@ const runSetup = async function () {
 
             let maxBets = await askMaxBets()
             let verifications = await askVerifications()
+            let criterion = await askBetCriterion()
             let username = await askUsername()
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ maxBets, verifications, username, password, minBalance })
+            resolve({ maxBets, verifications, username, password, minBalance, criterion })
         } catch (e) {
             reject(e)
         } finally {

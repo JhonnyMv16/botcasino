@@ -1,7 +1,6 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
 
-const BET_SLICE = 3
 const BET_MAX_ATTEMTPS = 2
 
 const dG = utils.range(25, 36)
@@ -20,8 +19,8 @@ const BET_C1_C2 = 'BET_C1_C2'
 const BET_C2_C3 = 'BET_C2_C3'
 const BET_C1_C3 = 'BET_C1_C3'
 
-function canBet(duzia, history) {
-    let lastResults = history.slice(0, BET_SLICE)
+function canBet(duzia, history, criterion) {
+    let lastResults = history.slice(0, criterion)
     let canBet = true
 
     lastResults.forEach(item => {
@@ -32,42 +31,42 @@ function canBet(duzia, history) {
     return canBet
 }
 
-const findPossibleBet = function (tables) {
+const findPossibleBet = function (tables, config) {
     let tablesToBet = []
 
     tables.forEach(table => {
         let name = table.name
         let index = table.index
 
-        if (table.history.length <= BET_SLICE) {
+        if (table.history.length <= config.criterion) {
             console.log(`Histórico não encontrado, mesa ${name}, history: ${table.history}`)
             return
         }
 
-        let history = table.history.slice(0, BET_SLICE)
+        let history = table.history.slice(0, config.criterion)
 
         if (table.min === 2.50) {
-            if (canBet(dG, table.history)) {
+            if (canBet(dG, table.history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia média'
                 let code = DB_DM
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dM, table.history)) {
+            } else if (canBet(dM, table.history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia alta'
                 let code = DB_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dB, table.history)) {
+            } else if (canBet(dB, table.history, config.criterion)) {
                 let bet = 'Dúzia média e dúzia alta'
                 let code = DM_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cOne, table.history)) {
+            } else if (canBet(cOne, table.history, config.criterion)) {
                 let bet = 'Coluna 2 e coluna 3'
                 let code = BET_C2_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cTwo, table.history)) {
+            } else if (canBet(cTwo, table.history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 3'
                 let code = BET_C1_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cThree, table.history)) {
+            } else if (canBet(cThree, table.history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 2'
                 let code = BET_C1_C2
                 tablesToBet.push({ name, bet, code, history, index })
@@ -320,9 +319,9 @@ function isBetGreen(betCode, number) {
     return result
 }
 
-function hasErrorInState(state, table) {
-    let xHistory = table.history.slice(0, BET_SLICE)
-    let yHistory = state.history.slice(0, BET_SLICE)
+function hasErrorInState(state, table, criterion) {
+    let xHistory = table.history.slice(0, criterion)
+    let yHistory = state.history.slice(0, criterion)
 
     if (JSON.stringify(xHistory) !== JSON.stringify(yHistory)) {
         console.error('Erro -> Divergencia encontrada no histórico da mesa!\n')

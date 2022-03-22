@@ -165,7 +165,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         await mouseUpAndDown(page)
 
         let tables = await actions.findTablesToBet(casinoFrame)
-        let possibleBets = betManager.findPossibleBet(tables)
+        let possibleBets = betManager.findPossibleBet(tables, config)
         let hasPossibleBet = possibleBets.length > 0
 
         console.log(`Verificação ${verifications}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
@@ -191,7 +191,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         }
 
         let betRealized = await betManager.bet(page, casinoFrame, possibleBet)
-        
+
         if (betRealized) {
             betRealized += 1;
             console.log(`Apostas realizadas: ${betRealized}\n`)

@@ -178,6 +178,7 @@ exports.openTable = async function (casinoFrame, table) {
     let elements = await casinoFrame.$$('.lobby-table__container')
     let tableEl = elements[table.index]
     await tableEl.click()
+    await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]')
 }
 
 exports.getTableState = async function (casinoFrame) {

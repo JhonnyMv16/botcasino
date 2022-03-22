@@ -430,6 +430,7 @@ const bet = async function (page, casinoFrame, table) {
     console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
 
     await actions.openTable(casinoFrame, table)
+    await utils.sleep(5000)
     await actions.closeBetModal(casinoFrame)
 
     let state = await actions.getTableState(casinoFrame)

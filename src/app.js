@@ -156,7 +156,7 @@ function printError(e) {
 }
 
 async function executeVerificationsToBet(page, casinoFrame, config) {
-    var verifications = 0
+    var verifications = 1
 
     while (shouldContinueVerification(verifications, config)) {
 
@@ -192,7 +192,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
 
         let betRealized = await betManager.bet(page, casinoFrame, possibleBet, config)
 
-        if (betRealized) {
+        if (betRealized === true) {
             betRealized += 1;
             console.log(`Apostas realizadas: ${betRealized}\n`)
         }

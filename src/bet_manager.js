@@ -1,7 +1,7 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
 
-const BET_MAX_ATTEMTPS = 2
+const BET_MAX_ATTEMTPS = 3
 
 const dG = utils.range(25, 36)
 const dM = utils.range(13, 24)
@@ -341,7 +341,14 @@ function hasErrorInState(state, table, criterion) {
 }
 
 function getCountOfClick(attempts) {
-    return attempts === 2 ? 3 : 1
+    switch (attempts) {
+        case 3:
+            return 9
+        case 2:
+            return 3
+        default:
+            return 1
+    }
 }
 
 async function executeBet(page, casinoFrame, table, state) {

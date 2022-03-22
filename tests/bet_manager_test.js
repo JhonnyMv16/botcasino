@@ -21,6 +21,10 @@ const PossibleBetDbDaTest = () => {
   return betManager.findPossibleBet(TABLES_TO_BET)
 }
 
+const IsGreenBetDmDaTest = () => {
+  return betManager.isBetGreen(betManager.betCodes.DM_DA, 25)
+}
+
 const ClickMinValueTest = async () => {
   let browser = await puppeteer.launch();
   let page = await browser.newPage()
@@ -122,6 +126,7 @@ const clickAnnouncementButtonTest = async () => {
 
 exports.tests = async () => {
 
+  testsync('Is Green bet DM DA', true, IsGreenBetDmDaTest)
   testsync('Possible bet DM DA', BET_DM_DA_EXPECTED, PossibleBetDbDaTest)
   await testAsync('Click min value', undefined, ClickMinValueTest)
   await testAsync('Click low dozen', undefined, ClickLowDozenTest)

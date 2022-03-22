@@ -12,8 +12,8 @@ module.exports = {
     },
     
      login: {
-        username: 'magnoramos23',
-        password: 'Timao@12345'
+        username: 'moto998340409',
+        password: 'termina38ply'
     },
     
      exportFiles: {

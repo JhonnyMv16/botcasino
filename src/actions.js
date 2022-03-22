@@ -1,7 +1,10 @@
-"use strict";
-
-const vars = require('./vars.js')
 const fs = require('fs');
+const vars = require('./vars.js')
+
+const TABLES_BLOCK_LIST = [
+    'Football French Roulette',
+    'Spread Bet Roulette'
+]
 
 var print_step = 1;
 var print_green = 1;
@@ -14,42 +17,22 @@ async function findAsync(arr, asyncCallback) {
     return arr[index];
 }
 
+async function findBalanceStr(casinoFrame) {
+    let text = await casinoFrame.$eval('.balance__value ', (el) => el.innerText.trim())
+    return text
+}
+
 const getBalance = async function (casinoFrame) {
-    return await casinoFrame.$eval('.balance__value ', (el) => Number(el.innerText.trim().replace('R$', '').replace(' ', '').replace(', ', '.')))
+    var balance = await findBalanceStr(casinoFrame)
+    balance = balance.replace('R$', '').replace(' ', '').replace(', ', '.')
+    return Number(balance)
 }
 
-/* Functions to expose */
+exports.getBalance = getBalance
 
-const clickXy = function (x, y, count) {
-    var ev = new MouseEvent('click', {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true,
-        'screenX': x,
-        'screenY': y
-    });
-
-    var el = document.elementFromPoint(x, y);
-    for (let index = 1; index <= count; index++) {
-        el.dispatchEvent(ev);
-    }
-}
-
-const simulateClick = function (x, y, count = 1) {
-    var clickEvent = document.createEvent('MouseEvents');
-    clickEvent.initMouseEvent(
-        'click', true, true, window, 0,
-        0, 0, x, y, false, false,
-        false, false, 0, null
-    );
-    for (let index = 0; index < count; index++) {
-        document.elementFromPoint(x, y).dispatchEvent(clickEvent);
-    }
-}
-
-exports.exposeFunctions = async function (page) {
-    await page.exposeFunction("clickXy", clickXy)
-    await page.exposeFunction("simulateClick", simulateClick)
+exports.printBalance = async function (casinoFrame) {
+    let balance = await findBalanceStr(casinoFrame)
+    console.log(`Saldo ${balance}`)
 }
 
 exports.printScreen = async function (page) {
@@ -99,39 +82,29 @@ exports.printLoss = async function (page) {
 }
 
 exports.toggleExpandTables = async function (mainPage) {
-    console.log('Trying expand/collapse tables..')
     let button = await mainPage.$('.inline-games-page-component__game-header-right ')
 
     if (!button) {
-        console.error('Error -> Expand button not found')
+        throw Error("Expand button not found")
     } else {
         await button.click()
-        console.log('Tables expanded/collapsed!\n')
     }
 }
 
-/**
- * this method will click on tab with name 'Roulette'
- */
 exports.clickRouletteTab = async function clickRouletteTab(frame) {
-    console.log('Finding tab..')
+    console.log('Click roulette tab...')
     let tabs = await frame.$$('.lobby-category-item')
     let rouletteTab = await findAsync(tabs, async h => await h.evaluate(el => el.textContent.trim().includes('Roulette')))
 
     if (!rouletteTab) {
-        console.log('Roullete tab not found!\n')
-        process.exit(0)
+        throw Error("Roullete tab not found")
     }
 
     await rouletteTab.click()
-    console.log('Roulette tab clicked!\n')
 }
 
-/**
-* this method will retrieve all tables from page
-*/
 exports.findTablesToBet = async function (casinoFrame) {
-    return  await casinoFrame.evaluate(_ => {
+    return await casinoFrame.evaluate((TABLES_BLOCK_LIST) => {
         let tablesElements = document.querySelectorAll('.lobby-table__container')
         let tables = []
         for (let index = 0; index < tablesElements.length; index++) {
@@ -141,10 +114,9 @@ exports.findTablesToBet = async function (casinoFrame) {
             var min = table.querySelector('.lobby-table-limits__min').textContent
 
             min = min.replace('R$', '').replace(' ', '').replace(',', '.').trim()
-
             min = Number(min)
 
-            if (min === 2.5 && name !== 'Spread Bet Roulette') {
+            if (min === 2.5 && !TABLES_BLOCK_LIST.includes(name)) {
                 let historyElements = table.querySelectorAll('div:first-child > div:nth-child(5) > div')
 
                 let history = []
@@ -152,24 +124,23 @@ exports.findTablesToBet = async function (casinoFrame) {
                     let result = historyElements[index].textContent.split('x')[0]
                     history.push(Number(result))
                 }
-    
-                let object = { name, min, history, index } 
+
+                let object = { name, min, history, index }
                 tables.push(object)
             }
         }
         return tables
-    })
+    }, TABLES_BLOCK_LIST)
 }
 
 exports.findCasinoFrame = async function (page) {
+    console.log('Finding casino frame...')
     let frames = await page.frames()
     let rouletteFrame = frames.find(f => f.url() === 'https://casino.bet365.com/Play/LiveRoulette')
 
     if (!rouletteFrame) {
         console.error('Error -> Frame roulette live not found!\n')
         process.exit(0)
-    } else {
-        console.log('Frame roulette found!\n')
     }
 
     let gamingFrame = rouletteFrame.childFrames().find(f => f.url().includes('https://www.sgla365.com/GamingLaunch'))
@@ -184,25 +155,13 @@ exports.findCasinoFrame = async function (page) {
     if (!casinoFrame) {
         console.error('Error -> Frame casino client not found!\n')
         process.exit(0)
-    } else {
-        console.log('Frame casino client found!\n')
     }
 
     return casinoFrame
 }
 
-exports.logout = async function logout(page) {
-    let links = await page.$$eval('div.members-dropdown-component__log-out-link')
-    if (links && links.length > 0) {
-        let logoutLink = links[0]
-        await logoutLink.click()
-        console.log('Logout sucess!\n')
-    } else {
-        console.error('Error -> Logout link not found!\n')
-    }
-}
-
 exports.closeCasinoLive = async function (casinoFrame) {
+    console.log('Closing casino live...')
     await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]', { timeout: 0 })
     let buttons = await casinoFrame.$('.close-button__icon')
 
@@ -214,8 +173,6 @@ exports.closeCasinoLive = async function (casinoFrame) {
     await casinoFrame.click('.close-button__icon')
 }
 
-exports.getBalance = getBalance
-
 exports.openTable = async function (casinoFrame, table) {
     console.log(`Opening table ${table.name}..`)
     let elements = await casinoFrame.$$('.lobby-table__container')
@@ -223,61 +180,7 @@ exports.openTable = async function (casinoFrame, table) {
     await tableEl.click()
 }
 
-exports.getTableBetPoints = async function (casinoFrame) {
-
-    async function findColumns() {
-        let result = await casinoFrame.$$eval('text', elements => {
-            let columns = elements.filter(el => el.textContent === '2to1')
-            return columns.map(c => {
-                let rect = c.getBoundingClientRect()
-                return { x: rect.x, y: rect.y }
-            })
-        })
-
-        let c3 = { name: 'Coluna 3', ...result[0] }
-        let c2 = { name: 'Coluna 2', ...result[1] }
-        let c1 = { name: 'Coluna 1', ...result[2] }
-
-        return { c1, c2, c3 }
-    }
-
-    async function findDozens() {
-        var elements = await casinoFrame.$x('//*[contains(text(), "1st 12")]')
-        let db = await elements[0].evaluate(e => {
-            let rect = e.getBoundingClientRect()
-            return { name: 'Dúzia baixa', x: rect.x, y: rect.y }
-        })
-
-        elements = await casinoFrame.$x('//*[contains(text(), "2nd 12")]')
-        let dm = await elements[0].evaluate(e => {
-            let rect = e.getBoundingClientRect()
-            return { name: 'Dúzia média', x: rect.x, y: rect.y }
-        })
-
-        elements = await casinoFrame.$x('//*[contains(text(), "3rd 12")]')
-        let da = await elements[0].evaluate(e => {
-            let rect = e.getBoundingClientRect()
-            return { name: 'Dúzia alta', x: rect.x, y: rect.y }
-        })
-
-        return { db, dm, da }
-    }
-
-
-    var minBtn = await casinoFrame.$$eval('text.chip__label', els => {
-        let e = els.filter(e => e.textContent.trim() === "2.5")[0]
-        let rect = e.getBoundingClientRect()
-        return { name: 'Botão 2.5', x: rect.x, y: rect.y }
-    })
-
-    let columns = await findColumns()
-    let dozens = await findDozens()
-
-    return { ...columns, ...dozens, minBtn: minBtn }
-}
-
 exports.getTableState = async function (casinoFrame) {
-
     var canBet = false
 
     try {
@@ -301,6 +204,7 @@ exports.closeBetModal = async function (casinoFrame) {
     if (shouldClose) {
         let last = elements.length - 1
         let modalClose = elements[last]
+        console.log('Closing bet dialog...')
         await modalClose.click()
     }
 

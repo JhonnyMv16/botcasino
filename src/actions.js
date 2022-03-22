@@ -162,7 +162,7 @@ exports.findCasinoFrame = async function (page) {
 
 exports.closeCasinoLive = async function (casinoFrame) {
     console.log('Closing casino live...')
-    await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]', { timeout: 0 })
+    await casinoFrame.waitForXPath('//*[contains(text(), "2.5")]')
     let buttons = await casinoFrame.$('.close-button__icon')
 
     if (buttons.length === 0) {

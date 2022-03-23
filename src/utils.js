@@ -17,6 +17,11 @@ const range = function (start, end, step = 1) {
 
 const clearFolder = (directory) => new Promise((resolve, reject) => {
 
+  if (!fs.existsSync(directory)) {
+    resolve()
+    return
+  }
+
   fs.readdir(directory, (err, files) => {
     if (err) reject(err);
 

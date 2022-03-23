@@ -1,6 +1,6 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
-
+const { STRATEGY_LOW, STRATEGY_HIGH } = require('./setup.js')
 const BET_MAX_ATTEMTPS = 3
 
 const dG = utils.range(25, 36)
@@ -312,32 +312,32 @@ async function clickAnnouncementButton(page, casinoFrame) {
     }
 }
 
-function isBetGreen(betCode, number) {
+function isBetGreen(betCode, number, strategy) {
     var result = false
 
     switch (betCode) {
         case DB_DM: {
-            result = (dB.includes(number) || dM.includes(number))
+            result = (dB.includes(number) || dM.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
         case DM_DA: {
-            result = (dM.includes(number) || dG.includes(number))
+            result = (dM.includes(number) || dG.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
         case DB_DA: {
-            result = (dB.includes(number) || dG.includes(number))
+            result = (dB.includes(number) || dG.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
         case BET_C1_C2: {
-            result = (cOne.includes(number) || cTwo.includes(number))
+            result = (cOne.includes(number) || cTwo.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
         case BET_C2_C3: {
-            result = (cTwo.includes(number) || cThree.includes(number))
+            result = (cTwo.includes(number) || cThree.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
         case BET_C1_C3: {
-            result = (cOne.includes(number) || cThree.includes(number))
+            result = (cOne.includes(number) || cThree.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
             break;
         }
     }
@@ -366,62 +366,133 @@ function hasErrorInState(state, table, criterion) {
     return false
 }
 
-function getCountOfClick(attempts) {
-    switch (attempts) {
-        case 3:
-            return 9
-        case 2:
-            return 3
+async function betByStrategy(betCode, attempt, strategy) {
+    switch (strategy) {
+        case STRATEGY_LOW:
+            await betByStrategyLow(betCode, attempt)
+            break
+        case STRATEGY_HIGH:
+            await betByStrategyHigh(betCode, attempt)
+            break
         default:
-            return 1
+            throw Error("Invalid strategy")
     }
 }
 
-async function executeBet(page, casinoFrame, table, state) {
+async function betByStrategyLow(betCode, attempt) {
+    var clicksToBet = 0
+
+    switch (attempt) {
+        case 3:
+            clicksToBet = 9
+            break
+        case 2:
+            clicksToBet = 3
+            break
+        default:
+            clicksToBet = 1
+    }
+
+    switch (betCode) {
+        case DB_DM: {
+            await clickLowDozen(casinoFrame, clicksToBet)
+            await clickMediumDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case DM_DA: {
+            await clickMediumDozen(casinoFrame, clicksToBet)
+            await clickHighDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case DB_DA: {
+            await clickLowDozen(casinoFrame, clicksToBet)
+            await clickHighDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C1_C2: {
+            await clickColOne(casinoFrame, clicksToBet)
+            await clickColTwo(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C2_C3: {
+            await clickColTwo(casinoFrame, clicksToBet)
+            await clickColThree(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C1_C3: {
+            await clickColOne(casinoFrame, clicksToBet)
+            await clickColThree(casinoFrame, clicksToBet)
+            break;
+        }
+    }
+}
+
+async function betByStrategyHigh(betCode, attempt) {
+    var clicksToBet = 0
+    var clicksZeroToBet = 0
+
+    switch (attempt) {
+        case 3:
+            clicksToBet = 24
+            clicksZeroToBet = 2
+            break
+        case 2:
+            clicksToBet = 7
+            clicksZeroToBet = 1
+            break
+        default:
+            clicksToBet = 2
+            clicksZeroToBet = 1
+    }
+
+    await clickZero(casinoFrame, clicksZeroToBet)
+
+    switch (betCode) {
+        case DB_DM: {
+            await clickLowDozen(casinoFrame, clicksToBet)
+            await clickMediumDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case DM_DA: {
+            await clickMediumDozen(casinoFrame, clicksToBet)
+            await clickHighDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case DB_DA: {
+            await clickLowDozen(casinoFrame, clicksToBet)
+            await clickHighDozen(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C1_C2: {
+            await clickColOne(casinoFrame, clicksToBet)
+            await clickColTwo(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C2_C3: {
+            await clickColTwo(casinoFrame, clicksToBet)
+            await clickColThree(casinoFrame, clicksToBet)
+            break;
+        }
+        case BET_C1_C3: {
+            await clickColOne(casinoFrame, clicksToBet)
+            await clickColThree(casinoFrame, clicksToBet)
+            break;
+        }
+    }
+}
+
+async function executeBet(page, casinoFrame, table, state, config) {
     await clickMinValue(page, casinoFrame)
 
     var currentState = state
     var isResultGreen = false
-    var resultNumber = 0
+    var resultNumber = -1
 
     for (let attempts = 1; attempts <= BET_MAX_ATTEMTPS && !isResultGreen; attempts++) {
 
         console.log(`Tentativa ${attempts}\n`)
 
-        var clicksToBet = getCountOfClick(attempts)
-
-        switch (table.code) {
-            case DB_DM: {
-                await clickLowDozen(casinoFrame, clicksToBet)
-                await clickMediumDozen(casinoFrame, clicksToBet)
-                break;
-            }
-            case DM_DA: {
-                await clickMediumDozen(casinoFrame, clicksToBet)
-                await clickHighDozen(casinoFrame, clicksToBet)
-                break;
-            }
-            case DB_DA: {
-                await clickLowDozen(casinoFrame, clicksToBet)
-                await clickHighDozen(casinoFrame, clicksToBet)
-                break;
-            }
-            case BET_C1_C2: {
-                await clickColOne(casinoFrame, clicksToBet)
-                await clickColTwo(casinoFrame, clicksToBet)
-                break;
-            }
-            case BET_C2_C3: {
-                await clickColTwo(casinoFrame, clicksToBet)
-                await clickColThree(casinoFrame, clicksToBet)
-                break;
-            }
-            case BET_C1_C3: {
-                await clickColOne(casinoFrame, clicksToBet)
-                await clickColThree(casinoFrame, clicksToBet)
-                break;
-            }
-        }
+        await betByStrategy(table.code, attempts, config.strategy)
 
         console.log('Aposta realizada!')
         await utils.sleep(1000)
@@ -439,7 +510,7 @@ async function executeBet(page, casinoFrame, table, state) {
             finishedRound = JSON.stringify(oldHistory) !== JSON.stringify(newState.history)
             resultNumber = newState.history[0]
 
-            isResultGreen = isBetGreen(table.code, resultNumber)
+            isResultGreen = isBetGreen(table.code, resultNumber, config.strategy)
         }
 
         if (!isResultGreen) {
@@ -474,7 +545,7 @@ const bet = async function (page, casinoFrame, table, config) {
     let state = await actions.getTableState(casinoFrame)
 
     if (hasErrorInState(state, table, config.criterion) === false) {
-        await executeBet(page, casinoFrame, table, state)
+        await executeBet(page, casinoFrame, table, state, config)
         betRealized = true
     } else {
         await utils.sleep(10000)

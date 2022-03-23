@@ -6,6 +6,9 @@ const DEFAULT_VERIFICATIONS = 500
 const DEFAULT_MIN_BALANCE = 5
 const DEFAULT_CRITERION = 5
 
+const STRATEGY_LOW = 1
+const STRATEGY_HIGH = 2
+
 const reader = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -14,6 +17,20 @@ const reader = readline.createInterface({
 const ask = (question) => new Promise(resolve => {
     reader.question(question, answer => resolve(answer))
 })
+
+async function askStrategy() {
+    let answer = await ask(`Stratégia 1 ou Stratégia 2? (1 - $70) (2 - $180) \n`)
+
+    if (answer === "1") {
+        return STRATEGY_LOW
+    }
+
+    if (answer === "2") {
+        return STRATEGY_HIGH
+    }
+
+    throw Error(`${answer} is an invalid Strategy, should be 1 or 2`)
+}
 
 async function askMaxBets() {
     let answer = await ask(`Máximo de apostas? (${DEFAULT_MAX_BETS}) \n`)
@@ -71,6 +88,7 @@ const runSetup = async function () {
             
             await utils.clearFolder('screenshots')
 
+            let strategy = await askStrategy()  
             let maxBets = await askMaxBets()
             let verifications = await askVerifications()
             let criterion = await askBetCriterion()
@@ -78,7 +96,7 @@ const runSetup = async function () {
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ maxBets, verifications, username, password, minBalance, criterion })
+            resolve({ strategy, maxBets, verifications, username, password, minBalance, criterion })
         } catch (e) {
             reject(e)
         } finally {
@@ -88,5 +106,7 @@ const runSetup = async function () {
 }
 
 module.exports = {
-    runSetup
+    runSetup,
+    STRATEGY_LOW,
+    STRATEGY_HIGH
 }

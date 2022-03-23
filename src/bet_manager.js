@@ -77,6 +77,32 @@ const findPossibleBet = function (tables, config) {
     return tablesToBet
 }
 
+async function clickZero(frame, count) {
+    return await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        var element = undefined
+
+        for (let index = 0; index < elements.length; index++) {
+            let el = elements[index]
+            if (el.textContent === "0") {
+                element = el
+            }
+        }
+
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
+        }
+    }, count)
+}
+
 async function clickMinValue(page, frame) {
     console.log('Click no valor mínimo..')
     await frame.evaluate(_ => {

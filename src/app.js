@@ -139,6 +139,11 @@ async function mouseUpAndDown(page) {
     await page.keyboard.press('ArrowUp')
 }
 
+async function printCurrentBalance(casinoFrame) {
+    const balance = await actions.getBalance(casinoFrame)
+    printBalance(balance)
+}
+
 function hasBalanceToBet(balance, minBalance) {
     let hasBalance = balance > minBalance
     if (!hasBalance) console.log('Saldo insuficiente para continuar =/\n')
@@ -230,6 +235,7 @@ async function start() {
             await executeVerificationsToBet(page, casinoFrame, config)
         }
 
+        await printCurrentBalance(casinoFrame)
         await logout(page)
     } catch (e) {
         printError(e)

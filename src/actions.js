@@ -3,7 +3,9 @@ const vars = require('./vars.js')
 
 const TABLES_BLOCK_LIST = [
     'Football French Roulette',
-    'Spread Bet Roulette'
+    'Spread Bet Roulette',
+    'Triumph French Roulette',
+    'French Roulette'
 ]
 
 var print_step = 1;

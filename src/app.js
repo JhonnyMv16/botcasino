@@ -31,7 +31,12 @@ async function saveCookies(page) {
 
 function readCookies() {
     try {
-        return fs.readFileSync('cookies.json', 'utf-8')
+        let cookies = fs.readFileSync('cookies.json', 'utf-8')
+        if (cookies){
+            return JSON.parse(cookies)
+        } else {
+            return ""
+        }
     } catch (e) {
         console.log('Não foi possível ler os cookies')
         console.error(e.message)

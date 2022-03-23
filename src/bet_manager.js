@@ -366,20 +366,20 @@ function hasErrorInState(state, table, criterion) {
     return false
 }
 
-async function betByStrategy(betCode, attempt, strategy) {
+async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
     switch (strategy) {
         case STRATEGY_LOW:
-            await betByStrategyLow(betCode, attempt)
+            await betByStrategyLow(casinoFrame, betCode, attempt)
             break
         case STRATEGY_HIGH:
-            await betByStrategyHigh(betCode, attempt)
+            await betByStrategyHigh(casinoFrame, betCode, attempt)
             break
         default:
             throw Error("Invalid strategy")
     }
 }
 
-async function betByStrategyLow(betCode, attempt) {
+async function betByStrategyLow(casinoFrame, betCode, attempt) {
     var clicksToBet = 0
 
     switch (attempt) {
@@ -427,7 +427,7 @@ async function betByStrategyLow(betCode, attempt) {
     }
 }
 
-async function betByStrategyHigh(betCode, attempt) {
+async function betByStrategyHigh(casinoFrame, betCode, attempt) {
     var clicksToBet = 0
     var clicksZeroToBet = 0
 
@@ -492,7 +492,7 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
         console.log(`Tentativa ${attempts}\n`)
 
-        await betByStrategy(table.code, attempts, config.strategy)
+        await betByStrategy(casinoFrame, table.code, attempts, config.strategy)
 
         console.log('Aposta realizada!')
         await utils.sleep(1000)

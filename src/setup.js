@@ -5,6 +5,7 @@ const DEFAULT_MAX_BETS = 5
 const DEFAULT_VERIFICATIONS = 500
 const DEFAULT_MIN_BALANCE = 5
 const DEFAULT_CRITERION = 5
+const DEFAULT_MAX_LOSS = 1
 
 const STRATEGY_LOW = 1
 const STRATEGY_HIGH = 2
@@ -82,13 +83,36 @@ async function askPassword() {
     return answer
 }
 
+async function askAttempts() {
+    let possibleAttempts = ['1', '2', '3']
+    let answer = await ask("Quantidade de tentativas? [1 - 3]\n")
+
+    if (!possibleAttempts.includes(answer)) {
+        throw Error("A quantidade precisar estar entre 1 e 3")
+    }
+
+    return Number(answer)
+}
+
+async function askMaxLoss() {
+    let answer = await ask(`Máximo de 'Loss'? (${DEFAULT_MAX_LOSS})\n`)
+
+    if (answer === "") {
+        return DEFAULT_MAX_LOSS
+    }
+
+    return Number(answer)
+}
+
 const runSetup = async function () {
     return new Promise(async (resolve, reject) => {
         try {
-            
+
             await utils.clearFolder('screenshots')
 
-            let strategy = await askStrategy()  
+            let strategy = await askStrategy()
+            let attempts = await askAttempts()
+            let maxLoss = await askMaxLoss()
             let maxBets = await askMaxBets()
             let verifications = await askVerifications()
             let criterion = await askBetCriterion()
@@ -96,7 +120,7 @@ const runSetup = async function () {
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ strategy, maxBets, verifications, username, password, minBalance, criterion })
+            resolve({ strategy, attempts, maxLoss, maxBets, verifications, username, password, minBalance, criterion })
         } catch (e) {
             reject(e)
         } finally {

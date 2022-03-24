@@ -1,7 +1,6 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
 const { STRATEGY_LOW, STRATEGY_HIGH } = require('./setup.js')
-const BET_MAX_ATTEMTPS = 3
 
 const dG = utils.range(25, 36)
 const dM = utils.range(13, 24)
@@ -488,7 +487,7 @@ async function executeBet(page, casinoFrame, table, state, config) {
     var isResultGreen = false
     var resultNumber = -1
 
-    for (let attempts = 1; attempts <= BET_MAX_ATTEMTPS && !isResultGreen; attempts++) {
+    for (let attempts = 1; attempts <= config.attempts && !isResultGreen; attempts++) {
 
         console.log(`Tentativa ${attempts}\n`)
 
@@ -530,10 +529,13 @@ async function executeBet(page, casinoFrame, table, state, config) {
     console.log('Aposta finalizada!')
     await utils.sleep(5000)
     await actions.printBalance(casinoFrame)
+
+    return isResultGreen
 }
 
 const bet = async function (page, casinoFrame, table, config) {
-    var betRealized = false
+    var isBetRealized = false
+    var isResultGreen = false
 
     console.log('\n✨ GO BET ✨ \n')
     console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
@@ -545,8 +547,8 @@ const bet = async function (page, casinoFrame, table, config) {
     let state = await actions.getTableState(casinoFrame)
 
     if (hasErrorInState(state, table, config.criterion) === false) {
-        await executeBet(page, casinoFrame, table, state, config)
-        betRealized = true
+        isResultGreen = await executeBet(page, casinoFrame, table, state, config)
+        isBetRealized = true
     } else {
         await utils.sleep(10000)
     }
@@ -554,7 +556,7 @@ const bet = async function (page, casinoFrame, table, config) {
     await actions.printScreen(page)
     await actions.closeCasinoLive(casinoFrame)
 
-    return betRealized
+    return  { isBetRealized, isResultGreen }
 }
 
 exports.betCodes = {

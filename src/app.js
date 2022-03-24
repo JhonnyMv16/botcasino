@@ -13,6 +13,8 @@ const VERIFICATION_DELAY = 1500
 var lastEnterTable = INITAL_CASINO
 var isExpand = false
 var betRealizedCount = 0
+var betLossCount = 0
+var betGreenCount = 0
 
 async function createBrowser() {
     return await puppeteer.launch()
@@ -139,15 +141,19 @@ async function mouseUpAndDown(page) {
     await page.keyboard.press('ArrowUp')
 }
 
-async function printCurrentBalance(casinoFrame) {
-    const balance = await actions.getBalance(casinoFrame)
-    printBalance(balance)
-}
-
 function hasBalanceToBet(balance, minBalance) {
     let hasBalance = balance > minBalance
     if (!hasBalance) console.log('Saldo insuficiente para continuar =/\n')
     return hasBalance
+}
+
+async function printBetsResult(casinoFrame) {
+    console.log(`Apostas realizadas: ${betRealizedCount}\n`)
+    console.log(`GREEN: ${betGreenCount}\n`)
+    console.log(`LOSS: ${betLossCount}\n`)
+
+    const balance = await actions.getBalance(casinoFrame)
+    printBalance(balance)
 }
 
 function printBalance(balance) {
@@ -155,7 +161,23 @@ function printBalance(balance) {
 }
 
 function shouldContinueVerification(verifications, config) {
-    return verifications < config.verifications && (betRealizedCount < config.maxBets)
+    
+    if (betLossCount === config.maxLoss) {
+        console.log('Máximo de loss configurado foi atingido!\n')
+        return false
+    }
+
+    if (verifications >= config.verifications) {
+        console.log('Limite de verificações atingido!\n')
+        return false
+    }
+
+    if (betRealizedCount > config.maxBets) {
+        console.log('Limite de apostas atingido!\n')
+        return false
+    }
+
+    return true
 }
 
 function printError(e) {
@@ -200,11 +222,17 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
             continue
         }
 
-        let isBetRealized = await betManager.bet(page, casinoFrame, possibleBet, config)
+        let result = await betManager.bet(page, casinoFrame, possibleBet, config)
 
-        if (isBetRealized) {
-            betRealizedCount += 1;
+        if (result.isBetRealized) {
+            betRealizedCount += 1
             console.log(`Apostas realizadas: ${betRealizedCount}\n`)
+        
+            if (result.isResultGreen) {
+                betGreenCount += 1
+            } else {
+                betLossCount += 1
+            }
         }
     }
 }
@@ -235,7 +263,7 @@ async function start() {
             await executeVerificationsToBet(page, casinoFrame, config)
         }
 
-        await printCurrentBalance(casinoFrame)
+        await printBetsResult(casinoFrame)
         await logout(page)
     } catch (e) {
         printError(e)

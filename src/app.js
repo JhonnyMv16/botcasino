@@ -15,6 +15,7 @@ var isExpand = false
 var betRealizedCount = 0
 var betLossCount = 0
 var betGreenCount = 0
+var lastEnterTableCount = 0
 
 async function createBrowser() {
     return await puppeteer.launch()
@@ -193,6 +194,8 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
     while (shouldContinueVerification(verifications, config)) {
 
         verifications += 1
+        lastEnterTableCount += 1
+
         await utils.sleep(VERIFICATION_DELAY)
         await mouseUpAndDown(page)
 
@@ -203,15 +206,17 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         console.log(`Verificação ${verifications}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
 
         // needed to avoid auto disconnect
-        if (verifications % 300 === 0) {
+        if (lastEnterTableCount % 300 === 0) {
             console.log('\nOpen some table to avoid disconnect!')
             await actions.printScreen(page)
 
             let random = Math.floor(Math.random() * tables.length)
             let someTable = tables[random]
             await actions.openTable(casinoFrame, someTable)
-            await utils.sleep(8000)
+            await utils.sleep(10000)
             await actions.closeCasinoLive(casinoFrame)
+            lastEnterTable = someTable
+            lastEnterTableCount = 0
             continue 
         }
 
@@ -236,6 +241,9 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         }
 
         let result = await betManager.bet(page, casinoFrame, possibleBet, config)
+
+        // reset because .bet method enter a table
+        lastEnterTable = 0
 
         if (result.isBetRealized) {
             betRealizedCount += 1

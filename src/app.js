@@ -202,6 +202,19 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
 
         console.log(`Verificação ${verifications}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
 
+        // needed to avoid auto disconnect
+        if (verifications % 300 === 0) {
+            console.log('\nOpen some table to avoid disconnect!')
+            await actions.printScreen(page)
+
+            let random = Math.floor(Math.random() * tables.length)
+            let someTable = tables[random]
+            await actions.openTable(casinoFrame, someTable)
+            await utils.sleep(8000)
+            await actions.closeCasinoLive(casinoFrame)
+            continue 
+        }
+
         if (!hasPossibleBet) {
             continue
         }

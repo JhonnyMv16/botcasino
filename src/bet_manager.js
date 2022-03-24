@@ -1,6 +1,6 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
-const { STRATEGY_LOW, STRATEGY_HIGH } = require('./setup.js')
+const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO } = require('./setup.js')
 
 const dG = utils.range(25, 36)
 const dM = utils.range(13, 24)
@@ -10,6 +10,9 @@ const cOne = utils.range(1, 36, 3)
 const cTwo = utils.range(2, 36, 3)
 const cThree = utils.range(3, 36, 3)
 
+const lowNumbers = utils.range(1, 18)
+const highNumbers = utils.range(19, 36)
+
 const DB_DM = 'DB_DM'
 const DM_DA = 'DM_DA'
 const DB_DA = 'DB_DA'
@@ -18,13 +21,16 @@ const BET_C1_C2 = 'BET_C1_C2'
 const BET_C2_C3 = 'BET_C2_C3'
 const BET_C1_C3 = 'BET_C1_C3'
 
-function canBet(duzia, history, criterion) {
+const BET_LN = 'BET_LN'
+const BET_HN = 'BET_HN'
+
+function canBet(repetition, history, criterion) {
     let lastResults = history.slice(0, criterion)
     let canBet = true
 
     lastResults.forEach(item => {
         if (!canBet) return
-        canBet = duzia.includes(item)
+        canBet = repetition.includes(item)
     })
 
     return canBet
@@ -45,29 +51,37 @@ const findPossibleBet = function (tables, config) {
         let history = table.history
 
         if (table.min === 2.50) {
-            if (canBet(dG, history, config.criterion)) {
+            if (config.strategy !== STRATEGY_SIMPLE && canBet(dG, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia média'
                 let code = DB_DM
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dM, history, config.criterion)) {
+            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dM, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia alta'
                 let code = DB_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(dB, history, config.criterion)) {
+            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dB, history, config.criterion)) {
                 let bet = 'Dúzia média e dúzia alta'
                 let code = DM_DA
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cOne, history, config.criterion)) {
+            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cOne, history, config.criterion)) {
                 let bet = 'Coluna 2 e coluna 3'
                 let code = BET_C2_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cTwo, history, config.criterion)) {
+            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cTwo, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 3'
                 let code = BET_C1_C3
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (canBet(cThree, history, config.criterion)) {
+            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cThree, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 2'
                 let code = BET_C1_C2
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (config.strategy === STRATEGY_SIMPLE && canBet(lowNumbers, history, config.criterion)) {
+                let bet = 'Números altos'
+                let code = BET_HN
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (config.strategy === STRATEGY_SIMPLE == canBet(highNumbers, history, config.criterion)) {
+                let bet = 'Números baixos'
+                let code = BET_LN
                 tablesToBet.push({ name, bet, code, history, index })
             }
         }
@@ -280,6 +294,60 @@ async function clickColThree(frame, count) {
     }, count)
 }
 
+async function clickHighNumbers(frame, count) {
+    await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        let filtered = []
+
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (element.textContent === "19-36") {
+                filtered.push(element)
+            }
+        }
+
+        var element = filtered[0]
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
+        }
+    }, count)
+}
+
+async function clickLowNumbers(frame, count) {
+    await frame.evaluate((count) => {
+        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
+        let filtered = []
+
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (element.textContent === "1-18") {
+                filtered.push(element)
+            }
+        }
+
+        var element = filtered[0]
+        let rect = element.getBoundingClientRect()
+        var clickEvent = document.createEvent('MouseEvents');
+        clickEvent.initMouseEvent(
+            'click', true, true, window, 0,
+            0, 0, rect.x, rect.y, false, false,
+            false, false, 0, null
+        );
+
+        for (let index = 0; index < count; index++) {
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
+        }
+    }, count)
+}
+
 async function clickHeaderAccount(page) {
     await page.click('div.members-dropdown-component__members-icon-container')
 }
@@ -316,27 +384,35 @@ function isBetGreen(betCode, number, strategy) {
 
     switch (betCode) {
         case DB_DM: {
-            result = (dB.includes(number) || dM.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (dB.includes(number) || dM.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
         case DM_DA: {
-            result = (dM.includes(number) || dG.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (dM.includes(number) || dG.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
         case DB_DA: {
-            result = (dB.includes(number) || dG.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (dB.includes(number) || dG.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
         case BET_C1_C2: {
-            result = (cOne.includes(number) || cTwo.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (cOne.includes(number) || cTwo.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
         case BET_C2_C3: {
-            result = (cTwo.includes(number) || cThree.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (cTwo.includes(number) || cThree.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
         case BET_C1_C3: {
-            result = (cOne.includes(number) || cThree.includes(number)) || (strategy == STRATEGY_HIGH && number === 0)
+            result = (cOne.includes(number) || cThree.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
+            break;
+        }
+        case BET_LN: {
+            result = lowNumbers.includes(number)
+            break;
+        }
+        case BET_HN: {
+            result = highNumbers.includes(number)
             break;
         }
     }
@@ -367,18 +443,56 @@ function hasErrorInState(state, table, criterion) {
 
 async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
     switch (strategy) {
-        case STRATEGY_LOW:
-            await betByStrategyLow(casinoFrame, betCode, attempt)
+        case STRATEGY_SIMPLE: {
+            await betStrategySimple(casinoFrame, betCode, attempt)
             break
-        case STRATEGY_HIGH:
-            await betByStrategyHigh(casinoFrame, betCode, attempt)
+        }
+        case STRATEGY_DOUBLE: {
+            await betStrategyDouble(casinoFrame, betCode, attempt)
             break
+        }
+        case STRATEGY_DOUBLE_ZERO: {
+            await betStrategyDoubleZero(casinoFrame, betCode, attempt)
+            break
+        }
         default:
             throw Error("Invalid strategy")
     }
 }
 
-async function betByStrategyLow(casinoFrame, betCode, attempt) {
+async function betStrategySimple(casinoFrame, betCode, attempt) {
+    var clicksToBet = 0
+
+    switch (attempt) {
+        case 4:
+            clicksToBet = 16
+            break
+        case 4:
+            clicksToBet = 8
+            break
+        case 3:
+            clicksToBet = 4
+            break
+        case 2:
+            clicksToBet = 2
+            break
+        default:
+            clicksToBet = 1
+    }
+
+    switch (betCode) {
+        case BET_LN:
+            await clickLowNumbers(casinoFrame, clicksToBet)
+            break
+        case BET_HN:
+            await clickHighNumbers(casinoFrame, clicksToBet)
+            break
+        default:
+            throw Error(`Invalid bet code ${betCode} for simple strategy`)
+    }
+}
+
+async function betStrategyDouble(casinoFrame, betCode, attempt) {
     var clicksToBet = 0
 
     switch (attempt) {
@@ -426,7 +540,7 @@ async function betByStrategyLow(casinoFrame, betCode, attempt) {
     }
 }
 
-async function betByStrategyHigh(casinoFrame, betCode, attempt) {
+async function betStrategyDoubleZero(casinoFrame, betCode, attempt) {
     var clicksToBet = 0
     var clicksZeroToBet = 0
 
@@ -537,26 +651,34 @@ const bet = async function (page, casinoFrame, table, config) {
     var isBetRealized = false
     var isResultGreen = false
 
-    console.log('\n✨ GO BET ✨ \n')
-    console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
+    try {
+        console.log('\n✨ GO BET ✨ \n')
+        console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
 
-    await actions.openTable(casinoFrame, table)
-    await utils.sleep(5000)
-    await actions.closeBetModal(casinoFrame)
+        await actions.openTable(casinoFrame, table)
+        await utils.sleep(5000)
+        await actions.closeBetModal(casinoFrame)
 
-    let state = await actions.getTableState(casinoFrame)
+        let state = await actions.getTableState(casinoFrame)
 
-    if (hasErrorInState(state, table, config.criterion) === false) {
-        isResultGreen = await executeBet(page, casinoFrame, table, state, config)
-        isBetRealized = true
-    } else {
-        await utils.sleep(10000)
+        if (hasErrorInState(state, table, config.criterion) === false) {
+            isResultGreen = await executeBet(page, casinoFrame, table, state, config)
+            isBetRealized = true
+        } else {
+            await utils.sleep(10000)
+        }
+
+        await actions.printScreen(page)
+        await actions.closeCasinoLive(casinoFrame)
+
+    } catch (e) {
+        console.error(`Error -> ${e.message}\n`)
+        console.log('-------------------------')
+        console.log(`\n${e.stack}\n`)
+        console.log('-------------------------')
+    } finally {
+        return { isBetRealized, isResultGreen }
     }
-
-    await actions.printScreen(page)
-    await actions.closeCasinoLive(casinoFrame)
-
-    return  { isBetRealized, isResultGreen }
 }
 
 exports.betCodes = {

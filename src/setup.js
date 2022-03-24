@@ -7,8 +7,9 @@ const DEFAULT_MIN_BALANCE = 5
 const DEFAULT_CRITERION = 5
 const DEFAULT_MAX_LOSS = 1
 
-const STRATEGY_LOW = 1
-const STRATEGY_HIGH = 2
+const STRATEGY_SIMPLE = 1
+const STRATEGY_DOUBLE = 2
+const STRATEGY_DOUBLE_ZERO = 3
 
 const reader = readline.createInterface({
     input: process.stdin,
@@ -20,14 +21,15 @@ const ask = (question) => new Promise(resolve => {
 })
 
 async function askStrategy() {
-    let answer = await ask(`Stratégia 1 ou Stratégia 2? (1 - $70) (2 - $180) \n`)
+    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n`)
 
-    if (answer === "1") {
-        return STRATEGY_LOW
-    }
-
-    if (answer === "2") {
-        return STRATEGY_HIGH
+    switch (answer) {
+        case "1":
+            return STRATEGY_SIMPLE
+        case "2":
+            return STRATEGY_DOUBLE
+        case "3":
+            return STRATEGY_DOUBLE_ZERO
     }
 
     throw Error(`${answer} is an invalid Strategy, should be 1 or 2`)
@@ -131,6 +133,7 @@ const runSetup = async function () {
 
 module.exports = {
     runSetup,
-    STRATEGY_LOW,
-    STRATEGY_HIGH
+    STRATEGY_SIMPLE: STRATEGY_SIMPLE,
+    STRATEGY_DOUBLE: STRATEGY_DOUBLE,
+    STRATEGY_DOUBLE_ZERO: STRATEGY_DOUBLE_ZERO
 }

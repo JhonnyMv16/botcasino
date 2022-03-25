@@ -5,7 +5,8 @@ const TABLES_BLOCK_LIST = [
     'Football French Roulette',
     'Spread Bet Roulette',
     'Triumph French Roulette',
-    'French Roulette'
+    'French Roulette',
+    'Football Roulette'
 ]
 
 var print_step = 1;

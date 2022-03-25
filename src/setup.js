@@ -36,7 +36,7 @@ async function askStrategy() {
 }
 
 async function askMaxBets() {
-    let answer = await ask(`Máximo de apostas? (${DEFAULT_MAX_BETS}) \n`)
+    let answer = await ask(`Quantas apostas? (${DEFAULT_MAX_BETS})\n`)
 
     if (answer === "") {
         return DEFAULT_MAX_BETS
@@ -46,7 +46,7 @@ async function askMaxBets() {
 }
 
 async function askVerifications() {
-    let answer = await ask(`Quantas verificações? (${DEFAULT_VERIFICATIONS})\n`)
+    let answer = await ask(`Quantas verificações? (${DEFAULT_VERIFICATIONS}) | 1000 = 25 min\n`)
 
     if (answer === "") {
         return DEFAULT_VERIFICATIONS
@@ -56,17 +56,22 @@ async function askVerifications() {
 }
 
 async function askBetCriterion() {
-    let answer = await ask(`Critério de aposta? (${DEFAULT_CRITERION}) \n`)
+    let possibleCriterions = ["4", "5", "6", "7"]
+    let answer = await ask(`Critério de aposta? (5) [4 - 7] \n`)
 
     if (answer === "") {
         return DEFAULT_CRITERION
+    }
+
+    if (!possibleCriterions.includes(answer)) {
+        throw Error("Critério inválido")
     }
 
     return Number(answer)
 }
 
 async function askUsername() {
-    let answer = await ask("Usuário: \n")
+    let answer = await ask("\nUsuário: \n")
 
     if (answer === "") {
         throw Error("O Usuário não pode ser vazio")
@@ -86,11 +91,11 @@ async function askPassword() {
 }
 
 async function askAttempts() {
-    let possibleAttempts = ['1', '2', '3']
-    let answer = await ask("Quantidade de tentativas? [1 - 3]\n")
+    let possibleAttempts = ['1', '2', '3', "4"]
+    let answer = await ask("Quantidade de tentativas? (Martingale)\n")
 
     if (!possibleAttempts.includes(answer)) {
-        throw Error("A quantidade precisar estar entre 1 e 3")
+        throw Error("A quantidade precisar estar entre 1 e 4")
     }
 
     return Number(answer)
@@ -106,6 +111,21 @@ async function askMaxLoss() {
     return Number(answer)
 }
 
+async function askUseMinValue() {
+    let answer = await ask('Aposta com valor mínimo R$ 2,5 ? "s" ou "n"\n')
+    switch (answer.toLowerCase()) {
+        case "sim":
+        case "sim":
+            return true
+        case "não":
+        case "nao":
+        case "n":
+            return false
+        default:
+            throw Error("Resposta inválida, você precisa digitar 'Sim' ou 'Não'!")
+    }
+}
+
 const runSetup = async function () {
     return new Promise(async (resolve, reject) => {
         try {
@@ -114,15 +134,16 @@ const runSetup = async function () {
 
             let strategy = await askStrategy()
             let attempts = await askAttempts()
-            let maxLoss = await askMaxLoss()
-            let maxBets = await askMaxBets()
-            let verifications = await askVerifications()
             let criterion = await askBetCriterion()
+            let maxBets = await askMaxBets()
+            let maxLoss = await askMaxLoss()
+            let verifications = await askVerifications()
+            let shouldUseMinValue = await askUseMinValue()
             let username = await askUsername()
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ strategy, attempts, maxLoss, maxBets, verifications, username, password, minBalance, criterion })
+            resolve({ strategy, attempts, maxLoss, maxBets, verifications, shouldUseMinValue, username, password, minBalance, criterion })
         } catch (e) {
             reject(e)
         } finally {

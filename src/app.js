@@ -12,7 +12,7 @@ const VERIFICATION_DELAY = 1500
 
 var lastEnterTable = INITAL_CASINO
 var isExpand = false
-var betRealizedCount = 0
+var betCounter = 0
 var betLossCount = 0
 var betGreenCount = 0
 var lastEnterTableCount = 0
@@ -149,7 +149,7 @@ function hasBalanceToBet(balance, minBalance) {
 }
 
 async function printBetsResult(casinoFrame) {
-    console.log(`Apostas realizadas: ${betRealizedCount}\n`)
+    console.log(`Apostas realizadas: ${betCounter}\n`)
     console.log(`GREEN: ${betGreenCount}\n`)
     console.log(`LOSS: ${betLossCount}\n`)
 
@@ -173,7 +173,7 @@ function shouldContinueVerification(verifications, config) {
         return false
     }
 
-    if (betRealizedCount > config.maxBets) {
+    if (betCounter >= config.maxBets) {
         console.log('Limite de apostas atingido!\n')
         return false
     }
@@ -215,7 +215,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
             await actions.openTable(casinoFrame, someTable)
             await utils.sleep(10000)
             await actions.closeCasinoLive(casinoFrame)
-            lastEnterTable = someTable
+            lastEnterTable = someTable.name
             lastEnterTableCount = 0
             continue 
         }
@@ -243,11 +243,11 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         let result = await betManager.bet(page, casinoFrame, possibleBet, config)
 
         // reset because .bet method enter a table
-        lastEnterTable = 0
+        lastEnterTableCount = 0
 
         if (result.isBetRealized) {
-            betRealizedCount += 1
-            console.log(`Apostas realizadas: ${betRealizedCount}\n`)
+            betCounter += 1
+            console.log(`Apostas realizadas: ${betCounter}\n`)
         
             if (result.isResultGreen) {
                 betGreenCount += 1

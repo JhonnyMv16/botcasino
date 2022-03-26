@@ -4,7 +4,7 @@ const utils = require('./utils.js')
 const simple_strategy = require('./strategies/simple.js')
 const double_strategy = require('./strategies/double.js')
 const double_zero_strategy = require('./strategies/double_zero.js')
-const codes = require('./codes.js')
+const codes = require('./strategies/codes.js')
 
 const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO } = require('./setup.js')
 

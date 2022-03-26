@@ -35,8 +35,18 @@ const clearFolder = (directory) => new Promise((resolve, reject) => {
   })
 })
 
+async function runCatchingAsync(func) {
+  try {
+      await func()
+  } catch (error) {
+      actions.printError(error)
+      await actions.printScreen(page)
+  }
+}
+
 module.exports = {
   sleep,
   range,
-  clearFolder
+  clearFolder,
+  runCatchingAsync
 }

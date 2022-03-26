@@ -134,9 +134,9 @@ const runSetup = async function () {
 
             let strategy = await askStrategy()
             let attempts = await askAttempts()
-            let criterion = await askBetCriterion()
             let maxBets = await askMaxBets()
             let maxLoss = await askMaxLoss()
+            let criterion = await askBetCriterion()
             let verifications = await askVerifications()
             let shouldUseMinValue = await askUseMinValue()
             let username = await askUsername()

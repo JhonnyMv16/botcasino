@@ -84,7 +84,6 @@ exports.findTablesToBet = async function (casinoFrame) {
 }
 
 exports.findCasinoFrame = async function (page) {
-    console.log('Finding casino frame...')
     let frames = await page.frames()
     let rouletteFrame = frames.find(f => f.url() === 'https://casino.bet365.com/Play/LiveRoulette')
 

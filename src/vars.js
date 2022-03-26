@@ -6,17 +6,12 @@ module.exports = {
 
     viewPort: {
         width: 1700,
-        height: 960 ,
+        height: 960,
         deviceScaleFactor: 1,
         hasTouch: true
     },
-    
-     login: {
-        username: 'moto998340409',
-        password: 'termina38ply'
-    },
-    
-     exportFiles: {
+
+    exportFiles: {
         cookies: './cookies.json'
     }
 }

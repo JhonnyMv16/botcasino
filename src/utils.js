@@ -51,47 +51,37 @@ async function runCatchingAsync(func) {
 
 
 const printScreen = async function (page) {
-  if (vars.enablePrint) {
-
-    if (!fs.existsSync('screenshots')) {
-      fs.mkdirSync('screenshots');
-    }
-
-    let path = `screenshots/step-${print_step}.jpg`
-    await page.screenshot({ path: path });
-    console.log(`print -> ${path}\n`)
+  if (!fs.existsSync('screenshots')) {
+    fs.mkdirSync('screenshots');
   }
 
+  let path = `screenshots/step-${print_step}.jpg`
+  await page.screenshot({ path: path });
+  console.log(`print -> ${path}\n`)
   print_step++;
 }
 
 const printGreen = async function (page) {
-  if (vars.enablePrint) {
-
-    if (!fs.existsSync('screenshots')) {
-      fs.mkdirSync('screenshots');
-    }
-
-    let path = `screenshots/green-${print_green}.jpg`
-    await page.screenshot({ path: path });
-    console.log(`print green -> ${path}\n`)
+  if (!fs.existsSync('screenshots')) {
+    fs.mkdirSync('screenshots');
   }
+
+  let path = `screenshots/green-${print_green}.jpg`
+  await page.screenshot({ path: path });
+  console.log(`print green -> ${path}\n`)
 
   print_green++;
 }
 
 
 const printLoss = async function (page) {
-  if (vars.enablePrint) {
-
-    if (!fs.existsSync('screenshots')) {
-      fs.mkdirSync('screenshots');
-    }
-
-    let path = `screenshots/loss-${print_loss}.jpg`
-    await page.screenshot({ path: path });
-    console.log(`print loss -> ${path}\n`)
+  if (!fs.existsSync('screenshots')) {
+    fs.mkdirSync('screenshots');
   }
+
+  let path = `screenshots/loss-${print_loss}.jpg`
+  await page.screenshot({ path: path });
+  console.log(`print loss -> ${path}\n`)
 
   print_loss++;
 }

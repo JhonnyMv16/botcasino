@@ -1,6 +1,3 @@
-const fs = require('fs');
-const vars = require('./vars.js')
-
 const TABLES_BLOCK_LIST = [
     'Football French Roulette',
     'Spread Bet Roulette',

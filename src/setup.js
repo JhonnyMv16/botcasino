@@ -116,6 +116,7 @@ async function askUseMinValue() {
     switch (answer.toLowerCase()) {
         case "sim":
         case "sim":
+        case "s":
             return true
         case "não":
         case "nao":

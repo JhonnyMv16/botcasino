@@ -93,9 +93,7 @@ async function openCasinoLive(page) {
 }
 
 async function findCasinoFrame(page) {
-    let casinoFrame = await actions.findCasinoFrame(page)
-    await utils.printScreen(page)
-    return casinoFrame
+    return await actions.findCasinoFrame(page)
 }
 
 async function closeCasinoLive(page, casinoFrame) {

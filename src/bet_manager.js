@@ -1,5 +1,10 @@
 const actions = require('./actions.js')
 const utils = require('./utils.js')
+
+const simple_strategy = require('./strategies/simple.js')
+const double_strategy = require('./strategies/double.js')
+const double_zero_strategy = require('./strategies/double_zero.js')
+
 const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO } = require('./setup.js')
 
 const dG = utils.range(25, 36)
@@ -113,32 +118,6 @@ const findPossibleBet = function (tables, config) {
     return tablesToBet
 }
 
-async function clickZero(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        var element = undefined
-
-        for (let index = 0; index < elements.length; index++) {
-            let el = elements[index]
-            if (el.textContent === "0") {
-                element = el
-            }
-        }
-
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
 async function clickMinValue(page, frame) {
     console.log('Click no valor mínimo..')
     await frame.evaluate(_ => {
@@ -156,219 +135,6 @@ async function clickMinValue(page, frame) {
     })
     await utils.sleep(1000)
     await utils.printScreen(page)
-}
-
-async function clickLowDozen(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        var element = undefined
-
-        for (let index = 0; index < elements.length; index++) {
-            let el = elements[index]
-            if (el.textContent.includes("1st 12")) {
-                element = el
-            }
-        }
-
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y + 10, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickMediumDozen(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        var element = undefined
-
-        for (let index = 0; index < elements.length; index++) {
-            let el = elements[index]
-            if (el.textContent.includes("2nd 12")) {
-                element = el
-            }
-        }
-
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y + 10, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickHighDozen(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        var element = undefined
-
-        for (let index = 0; index < elements.length; index++) {
-            let el = elements[index]
-            if (el.textContent.includes("3rd 12")) {
-                element = el
-            }
-        }
-
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y + 10, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickColOne(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        let filtered = []
-
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (element.textContent.includes("2to1")) {
-                filtered.push(element)
-            }
-        }
-
-        var element = filtered[2]
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickColTwo(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        let filtered = []
-
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (element.textContent.includes("2to1")) {
-                filtered.push(element)
-            }
-        }
-
-        var element = filtered[1]
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickColThree(frame, count) {
-    return await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        let filtered = []
-
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (element.textContent.includes("2to1")) {
-                filtered.push(element)
-            }
-        }
-
-        var element = filtered[0]
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickHighNumbers(frame, count) {
-    await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        let filtered = []
-
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (element.textContent === "19-36") {
-                filtered.push(element)
-            }
-        }
-
-        var element = filtered[0]
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y + 10, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
-}
-
-async function clickLowNumbers(frame, count) {
-    await frame.evaluate((count) => {
-        let elements = document.querySelectorAll('text.roulette-table-cell__text-tag')
-        let filtered = []
-
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (element.textContent === "1-18") {
-                filtered.push(element)
-            }
-        }
-
-        var element = filtered[0]
-        let rect = element.getBoundingClientRect()
-        var clickEvent = document.createEvent('MouseEvents');
-        clickEvent.initMouseEvent(
-            'click', true, true, window, 0,
-            0, 0, rect.x, rect.y + 10, false, false,
-            false, false, 0, null
-        );
-
-        for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
-        }
-    }, count)
 }
 
 async function clickHeaderAccount(page) {
@@ -467,153 +233,19 @@ function hasErrorInState(state, table, criterion) {
 async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
     switch (strategy) {
         case STRATEGY_SIMPLE: {
-            await betStrategySimple(casinoFrame, betCode, attempt)
+            await simple_strategy.bet(casinoFrame, betCode, attempt)
             break
         }
         case STRATEGY_DOUBLE: {
-            await betStrategyDouble(casinoFrame, betCode, attempt)
+            await double_strategy.bet(casinoFrame, betCode, attempt)
             break
         }
         case STRATEGY_DOUBLE_ZERO: {
-            await betStrategyDoubleZero(casinoFrame, betCode, attempt)
+            await double_zero_strategy.bet(casinoFrame, betCode, attempt)
             break
         }
         default:
             throw Error("Invalid strategy")
-    }
-}
-
-async function betStrategySimple(casinoFrame, betCode, attempt) {
-    var clicksToBet = 0
-
-    switch (attempt) {
-        case 4:
-            clicksToBet = 16
-            break
-        case 4:
-            clicksToBet = 8
-            break
-        case 3:
-            clicksToBet = 4
-            break
-        case 2:
-            clicksToBet = 2
-            break
-        default:
-            clicksToBet = 1
-    }
-
-    switch (betCode) {
-        case BET_LN:
-            await clickLowNumbers(casinoFrame, clicksToBet)
-            break
-        case BET_HN:
-            await clickHighNumbers(casinoFrame, clicksToBet)
-            break
-        default:
-            throw Error(`Invalid bet code ${betCode} for simple strategy`)
-    }
-}
-
-async function betStrategyDouble(casinoFrame, betCode, attempt) {
-    var clicksToBet = 0
-
-    switch (attempt) {
-        case 3:
-            clicksToBet = 9
-            break
-        case 2:
-            clicksToBet = 3
-            break
-        default:
-            clicksToBet = 1
-    }
-
-    switch (betCode) {
-        case DB_DM: {
-            await clickLowDozen(casinoFrame, clicksToBet)
-            await clickMediumDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case DM_DA: {
-            await clickMediumDozen(casinoFrame, clicksToBet)
-            await clickHighDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case DB_DA: {
-            await clickLowDozen(casinoFrame, clicksToBet)
-            await clickHighDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C1_C2: {
-            await clickColOne(casinoFrame, clicksToBet)
-            await clickColTwo(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C2_C3: {
-            await clickColTwo(casinoFrame, clicksToBet)
-            await clickColThree(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C1_C3: {
-            await clickColOne(casinoFrame, clicksToBet)
-            await clickColThree(casinoFrame, clicksToBet)
-            break;
-        }
-    }
-}
-
-async function betStrategyDoubleZero(casinoFrame, betCode, attempt) {
-    var clicksToBet = 0
-    var clicksZeroToBet = 0
-
-    switch (attempt) {
-        case 3:
-            clicksToBet = 24
-            clicksZeroToBet = 2
-            break
-        case 2:
-            clicksToBet = 7
-            clicksZeroToBet = 1
-            break
-        default:
-            clicksToBet = 2
-            clicksZeroToBet = 1
-    }
-
-    await clickZero(casinoFrame, clicksZeroToBet)
-
-    switch (betCode) {
-        case DB_DM: {
-            await clickLowDozen(casinoFrame, clicksToBet)
-            await clickMediumDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case DM_DA: {
-            await clickMediumDozen(casinoFrame, clicksToBet)
-            await clickHighDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case DB_DA: {
-            await clickLowDozen(casinoFrame, clicksToBet)
-            await clickHighDozen(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C1_C2: {
-            await clickColOne(casinoFrame, clicksToBet)
-            await clickColTwo(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C2_C3: {
-            await clickColTwo(casinoFrame, clicksToBet)
-            await clickColThree(casinoFrame, clicksToBet)
-            break;
-        }
-        case BET_C1_C3: {
-            await clickColOne(casinoFrame, clicksToBet)
-            await clickColThree(casinoFrame, clicksToBet)
-            break;
-        }
     }
 }
 
@@ -709,13 +341,6 @@ module.exports = {
     bet,
     isBetGreen,
     clickMinValue,
-    clickLowDozen,
-    clickMediumDozen,
-    clickHighDozen,
-    clickColOne,
-    clickColTwo,
-    clickColThree,
-    clickHighNumbers,
     clickHeaderAccount,
     clickMenuExit,
     clickAnnouncementButton,

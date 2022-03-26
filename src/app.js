@@ -181,13 +181,6 @@ function shouldContinueVerification(verifications, config) {
     return true
 }
 
-function printError(e) {
-    console.error(`Error -> ${e.message}\n`)
-    console.log('-------------------------')
-    console.log(`\n${e.stack}\n`)
-    console.log('-------------------------')
-}
-
 async function executeVerificationsToBet(page, casinoFrame, config) {
     var verifications = 1
 
@@ -287,7 +280,7 @@ async function start() {
         await printBetsResult(casinoFrame)
         await logout(page)
     } catch (e) {
-        printError(e)
+        actions.printError(e)
         await actions.printScreen(page)
     } finally {
         await browser.close()

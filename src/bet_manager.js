@@ -24,6 +24,13 @@ const BET_C1_C3 = 'BET_C1_C3'
 const BET_LN = 'BET_LN'
 const BET_HN = 'BET_HN'
 
+async function hasBalanceToBet(casinoFrame) {
+    let balance = await actions.getBalance(casinoFrame)
+    let hasBalance = balance > 10
+    if (!hasBalance) console.log('Saldo insuficiente para continuar =/\n')
+    return hasBalance
+}
+
 function canBet(repetition, history, criterion) {
     let lastResults = history.slice(0, criterion)
     let canBet = true
@@ -34,6 +41,21 @@ function canBet(repetition, history, criterion) {
     })
 
     return canBet
+}
+
+function canBetHighNumbers(tables, criterion) {
+    let tablesToBet = []
+    tables.forEach(table => {
+        let history = table.history
+        if (canBet(lowNumbers, history, criterion)) {
+            let name = table.name
+            let index = table.index
+            let bet = 'Números altos'
+            let code = BET_HN
+            tablesToBet.push({ name, bet, code, history, index })
+        }
+    })
+    return tablesToBet
 }
 
 const findPossibleBet = function (tables, config) {
@@ -79,14 +101,12 @@ const findPossibleBet = function (tables, config) {
                 let bet = 'Números altos'
                 let code = BET_HN
                 tablesToBet.push({ name, bet, code, history, index })
-            } 
-            /*
+            }
             else if (config.strategy === STRATEGY_SIMPLE && canBet(highNumbers, history, config.criterion)) {
                 let bet = 'Números baixos'
                 let code = BET_LN
                 tablesToBet.push({ name, bet, code, history, index })
             }
-            */
         }
     })
 
@@ -154,12 +174,12 @@ async function clickLowDozen(frame, count) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
+            0, 0, rect.x, rect.y + 10, false, false,
             false, false, 0, null
         );
 
         for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
         }
     }, count)
 }
@@ -180,12 +200,12 @@ async function clickMediumDozen(frame, count) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
+            0, 0, rect.x, rect.y + 10, false, false,
             false, false, 0, null
         );
 
         for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
         }
     }, count)
 }
@@ -206,12 +226,12 @@ async function clickHighDozen(frame, count) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
+            0, 0, rect.x, rect.y + 10, false, false,
             false, false, 0, null
         );
 
         for (let index = 0; index < count; index++) {
-            document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+            document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
         }
     }, count)
 }
@@ -314,7 +334,7 @@ async function clickHighNumbers(frame, count) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
+            0, 0, rect.x, rect.y + 10, false, false,
             false, false, 0, null
         );
 
@@ -341,7 +361,7 @@ async function clickLowNumbers(frame, count) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
-            0, 0, rect.x, rect.y, false, false,
+            0, 0, rect.x, rect.y + 10, false, false,
             false, false, 0, null
         );
 
@@ -598,7 +618,7 @@ async function betStrategyDoubleZero(casinoFrame, betCode, attempt) {
 }
 
 async function executeBet(page, casinoFrame, table, state, config) {
-    
+
     if (config.shouldUseMinValue) {
         await clickMinValue(page, casinoFrame)
     }
@@ -704,7 +724,11 @@ module.exports = {
     clickColOne,
     clickColTwo,
     clickColThree,
+    clickHighNumbers,
     clickHeaderAccount,
     clickMenuExit,
-    clickAnnouncementButton
+    clickAnnouncementButton,
+    hasBalanceToBet,
+    canBetHighNumbers,
+    hasErrorInState
 }

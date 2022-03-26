@@ -4,6 +4,7 @@ const utils = require('./utils.js')
 const simple_strategy = require('./strategies/simple.js')
 const double_strategy = require('./strategies/double.js')
 const double_zero_strategy = require('./strategies/double_zero.js')
+const codes = require('./codes.js')
 
 const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO } = require('./setup.js')
 
@@ -17,17 +18,6 @@ const cThree = utils.range(3, 36, 3)
 
 const lowNumbers = utils.range(1, 18)
 const highNumbers = utils.range(19, 36)
-
-const DB_DM = 'DB_DM'
-const DM_DA = 'DM_DA'
-const DB_DA = 'DB_DA'
-
-const BET_C1_C2 = 'BET_C1_C2'
-const BET_C2_C3 = 'BET_C2_C3'
-const BET_C1_C3 = 'BET_C1_C3'
-
-const BET_LN = 'BET_LN'
-const BET_HN = 'BET_HN'
 
 async function hasBalanceToBet(casinoFrame) {
     let balance = await actions.getBalance(casinoFrame)
@@ -56,7 +46,7 @@ function canBetHighNumbers(tables, criterion) {
             let name = table.name
             let index = table.index
             let bet = 'Números altos'
-            let code = BET_HN
+            let code = codes.BET_HN
             tablesToBet.push({ name, bet, code, history, index })
         }
     })
@@ -80,36 +70,36 @@ const findPossibleBet = function (tables, config) {
         if (table.min === 2.50) {
             if (config.strategy !== STRATEGY_SIMPLE && canBet(dG, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia média'
-                let code = DB_DM
+                let code = codes.DB_DM
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dM, history, config.criterion)) {
                 let bet = 'Dúzia baixa e dúzia alta'
-                let code = DB_DA
+                let code = codes.DB_DA
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dB, history, config.criterion)) {
                 let bet = 'Dúzia média e dúzia alta'
-                let code = DM_DA
+                let code = codes.DM_DA
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cOne, history, config.criterion)) {
                 let bet = 'Coluna 2 e coluna 3'
-                let code = BET_C2_C3
+                let code = codes.BET_C2_C3
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cTwo, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 3'
-                let code = BET_C1_C3
+                let code = codes.BET_C1_C3
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cThree, history, config.criterion)) {
                 let bet = 'Coluna 1 e coluna 2'
-                let code = BET_C1_C2
+                let code = codes.BET_C1_C2
                 tablesToBet.push({ name, bet, code, history, index })
             } else if (config.strategy === STRATEGY_SIMPLE && canBet(lowNumbers, history, config.criterion)) {
                 let bet = 'Números altos'
-                let code = BET_HN
+                let code = codes.BET_HN
                 tablesToBet.push({ name, bet, code, history, index })
             }
             else if (config.strategy === STRATEGY_SIMPLE && canBet(highNumbers, history, config.criterion)) {
                 let bet = 'Números baixos'
-                let code = BET_LN
+                let code = codes.BET_LN
                 tablesToBet.push({ name, bet, code, history, index })
             }
         }
@@ -172,35 +162,35 @@ function isBetGreen(betCode, number, strategy) {
     var result = false
 
     switch (betCode) {
-        case DB_DM: {
+        case codes.DB_DM: {
             result = (dB.includes(number) || dM.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case DM_DA: {
+        case codes.DM_DA: {
             result = (dM.includes(number) || dG.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case DB_DA: {
+        case codes.DB_DA: {
             result = (dB.includes(number) || dG.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case BET_C1_C2: {
+        case codes.BET_C1_C2: {
             result = (cOne.includes(number) || cTwo.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case BET_C2_C3: {
+        case codes.BET_C2_C3: {
             result = (cTwo.includes(number) || cThree.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case BET_C1_C3: {
+        case codes.BET_C1_C3: {
             result = (cOne.includes(number) || cThree.includes(number)) || (strategy === STRATEGY_DOUBLE_ZERO && number === 0)
             break;
         }
-        case BET_LN: {
+        case codes.BET_LN: {
             result = lowNumbers.includes(number)
             break;
         }
-        case BET_HN: {
+        case codes.BET_HN: {
             result = highNumbers.includes(number)
             break;
         }
@@ -331,9 +321,9 @@ const bet = async function (page, casinoFrame, table, config) {
 }
 
 exports.betCodes = {
-    DB_DM,
-    DM_DA,
-    DB_DA
+    DB_DM: codes.DB_DM,
+    DM_DA: codes.DM_DA,
+    DB_DA: codes.DB_DA
 }
 
 module.exports = {

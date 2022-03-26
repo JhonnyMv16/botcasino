@@ -1,4 +1,5 @@
 const clicks = require('./clicks.js')
+const codes = require('./codes.js')
 
 exports.bet = async function (casinoFrame, betCode, attempt) {
     var clicksToBet = 0
@@ -21,10 +22,10 @@ exports.bet = async function (casinoFrame, betCode, attempt) {
     }
 
     switch (betCode) {
-        case BET_LN:
+        case codes.BET_LN:
             await clicks.clickLowNumbers(casinoFrame, clicksToBet)
             break
-        case BET_HN:
+        case codes.BET_HN:
             await clicks.clickHighNumbers(casinoFrame, clicksToBet)
             break
         default:

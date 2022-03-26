@@ -33,6 +33,13 @@ const getBalance = async function (casinoFrame) {
 
 exports.getBalance = getBalance
 
+exports.printError = function (e) {
+    console.error(`Error -> ${e.message}\n`)
+    console.log('-------------------------')
+    console.log(`\n${e.stack}\n`)
+    console.log('-------------------------')
+}
+
 exports.printBalance = async function (casinoFrame) {
     let balance = await findBalanceStr(casinoFrame)
     console.log(`Saldo ${balance}\n`)

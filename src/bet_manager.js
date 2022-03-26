@@ -155,7 +155,7 @@ async function clickMinValue(page, frame) {
         document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
     })
     await utils.sleep(1000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function clickLowDozen(frame, count) {
@@ -635,7 +635,7 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
         console.log('Aposta realizada!')
         await utils.sleep(1000)
-        await actions.printScreen(page)
+        await utils.printScreen(page)
 
         var finishedRound = false
         var oldHistory = currentState.history
@@ -660,10 +660,10 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
     if (isResultGreen) {
         console.log(`${resultNumber} GREEN ✔️\n`)
-        await actions.printGreen(page)
+        await utils.printGreen(page)
     } else {
         console.log(`${resultNumber} LOSS ❌\n`)
-        await actions.printLoss(page)
+        await utils.printLoss(page)
     }
 
     console.log('Aposta finalizada!')
@@ -677,34 +677,25 @@ const bet = async function (page, casinoFrame, table, config) {
     var isBetRealized = false
     var isResultGreen = false
 
-    try {
-        console.log('\n✨ GO BET ✨ \n')
-        console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
+    console.log('\n✨ GO BET ✨ \n')
+    console.log(`Mesa: ${table.name}\nAposta: ${table.bet}`)
 
-        await actions.openTable(casinoFrame, table)
-        await utils.sleep(5000)
-        await actions.closeBetModal(casinoFrame)
+    await actions.openTable(casinoFrame, table)
+    await actions.closeBetModal(casinoFrame)
 
-        let state = await actions.getTableState(casinoFrame)
+    let state = await actions.getTableState(casinoFrame)
 
-        if (hasErrorInState(state, table, config.criterion) === false) {
-            isResultGreen = await executeBet(page, casinoFrame, table, state, config)
-            isBetRealized = true
-        } else {
-            await utils.sleep(15000)
-        }
-
-        await actions.printScreen(page)
-        await actions.closeCasinoLive(casinoFrame)
-
-    } catch (e) {
-        console.error(`Error -> ${e.message}\n`)
-        console.log('-------------------------')
-        console.log(`\n${e.stack}\n`)
-        console.log('-------------------------')
-    } finally {
-        return { isBetRealized, isResultGreen }
+    if (hasErrorInState(state, table, config.criterion) === false) {
+        isResultGreen = await executeBet(page, casinoFrame, table, state, config)
+        isBetRealized = true
+    } else {
+        await utils.sleep(15000)
     }
+
+    await utils.printScreen(page)
+    await actions.closeCasinoLive(casinoFrame)
+
+    return { isBetRealized, isResultGreen }
 }
 
 exports.betCodes = {

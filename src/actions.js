@@ -9,10 +9,6 @@ const TABLES_BLOCK_LIST = [
     'Football Roulette'
 ]
 
-var print_step = 1;
-var print_green = 1;
-var print_loss = 1;
-
 async function findAsync(arr, asyncCallback) {
     const promises = arr.map(asyncCallback);
     const results = await Promise.all(promises);
@@ -33,62 +29,9 @@ const getBalance = async function (casinoFrame) {
 
 exports.getBalance = getBalance
 
-exports.printError = function (e) {
-    console.error(`Error -> ${e.message}\n`)
-    console.log('-------------------------')
-    console.log(`\n${e.stack}\n`)
-    console.log('-------------------------')
-}
-
 exports.printBalance = async function (casinoFrame) {
     let balance = await findBalanceStr(casinoFrame)
     console.log(`Saldo ${balance}\n`)
-}
-
-exports.printScreen = async function (page) {
-    if (vars.enablePrint) {
-
-        if (!fs.existsSync('screenshots')) {
-            fs.mkdirSync('screenshots');
-        }
-
-        let path = `screenshots/step-${print_step}.jpg`
-        await page.screenshot({ path: path });
-        console.log(`print -> ${path}\n`)
-    }
-
-    print_step++;
-}
-
-exports.printGreen = async function (page) {
-    if (vars.enablePrint) {
-
-        if (!fs.existsSync('screenshots')) {
-            fs.mkdirSync('screenshots');
-        }
-
-        let path = `screenshots/green-${print_green}.jpg`
-        await page.screenshot({ path: path });
-        console.log(`print green -> ${path}\n`)
-    }
-
-    print_green++;
-}
-
-
-exports.printLoss = async function (page) {
-    if (vars.enablePrint) {
-
-        if (!fs.existsSync('screenshots')) {
-            fs.mkdirSync('screenshots');
-        }
-
-        let path = `screenshots/loss-${print_loss}.jpg`
-        await page.screenshot({ path: path });
-        console.log(`print loss -> ${path}\n`)
-    }
-
-    print_loss++;
 }
 
 exports.toggleExpandTables = async function (mainPage) {

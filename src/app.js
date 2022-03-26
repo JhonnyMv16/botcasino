@@ -35,7 +35,7 @@ async function saveCookies(page) {
 function readCookies() {
     try {
         let cookies = fs.readFileSync('cookies.json', 'utf-8')
-        if (cookies){
+        if (cookies) {
             return JSON.parse(cookies)
         } else {
             return ""
@@ -60,7 +60,7 @@ async function initHomePage(page) {
     await page.goto(vars.HOME_URL);
     await page.waitForXPath('//*[contains(text(), "Login")]', { timeout: 0 })
     await utils.sleep(5000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function login(page, username, password) {
@@ -80,7 +80,7 @@ async function login(page, username, password) {
     await saveCookies(page)
 
     console.log('Login success!\n')
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function openCasinoLive(page) {
@@ -88,20 +88,20 @@ async function openCasinoLive(page) {
     await page.goto('https://casino.bet365.com/Play/LiveRoulette')
     await page.waitForXPath('//*[contains(text(), "Live Roulette ")]', { timeout: 0 })
     await utils.sleep(35000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
     console.log('Casino opened!\n')
 }
 
 async function findCasinoFrame(page) {
     let casinoFrame = await actions.findCasinoFrame(page)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
     return casinoFrame
 }
 
 async function closeCasinoLive(page, casinoFrame) {
     await actions.closeCasinoLive(casinoFrame)
     await utils.sleep(5000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function closeCasinoOffers(page, casinoFrame) {
@@ -112,7 +112,7 @@ async function closeCasinoOffers(page, casinoFrame) {
 async function clickRouletteTab(page, casinoFrame) {
     await actions.clickRouletteTab(casinoFrame)
     await utils.sleep(2000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function logout(page) {
@@ -125,7 +125,7 @@ async function logout(page) {
     await betManager.clickMenuExit(page)
     await utils.sleep(2000)
 
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function toggleExpand(page) {
@@ -133,7 +133,7 @@ async function toggleExpand(page) {
     isExpand = !isExpand
     await actions.toggleExpandTables(page)
     await utils.sleep(2000)
-    await actions.printScreen(page)
+    await utils.printScreen(page)
 }
 
 async function mouseUpAndDown(page) {
@@ -162,7 +162,7 @@ function printBalance(balance) {
 }
 
 function shouldContinueVerification(verifications, config) {
-    
+
     if (betLossCount === config.maxLoss) {
         console.log('Máximo de loss configurado foi atingido!\n')
         return false
@@ -181,7 +181,7 @@ function shouldContinueVerification(verifications, config) {
     return true
 }
 
-async function executeVerificationsToBet(page, casinoFrame, config) {
+async function executeVerificationsToBet(page, config) {
     var verifications = 1
 
     while (shouldContinueVerification(verifications, config)) {
@@ -192,6 +192,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         await utils.sleep(VERIFICATION_DELAY)
         await mouseUpAndDown(page)
 
+        let casinoFrame = await findCasinoFrame(page)
         let tables = await actions.findTablesToBet(casinoFrame)
         let possibleBets = betManager.findPossibleBet(tables, config)
         let hasPossibleBet = possibleBets.length > 0
@@ -201,7 +202,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         // needed to avoid auto disconnect
         if (lastEnterTableCount % 300 === 0) {
             console.log('\nOpen some table to avoid disconnect!')
-            await actions.printScreen(page)
+            await utils.printScreen(page)
 
             let random = Math.floor(Math.random() * tables.length)
             let someTable = tables[random]
@@ -210,7 +211,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
             await actions.closeCasinoLive(casinoFrame)
             lastEnterTable = someTable.name
             lastEnterTableCount = 0
-            continue 
+            continue
         }
 
         if (!hasPossibleBet) {
@@ -241,7 +242,7 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
         if (result.isBetRealized) {
             betCounter += 1
             console.log(`Apostas realizadas: ${betCounter}\n`)
-        
+
             if (result.isResultGreen) {
                 betGreenCount += 1
             } else {
@@ -252,12 +253,11 @@ async function executeVerificationsToBet(page, casinoFrame, config) {
 }
 
 async function start() {
-
     const config = await setup.runSetup()
     const browser = await createBrowser()
     const page = await createPage(browser)
 
-    try {
+    await utils.runCatchingAsync(_ => {
 
         await initHomePage(page)
         await login(page, config.username, config.password)
@@ -274,17 +274,15 @@ async function start() {
         printBalance(balance)
 
         if (hasBalanceToBet(balance, config.minBalance)) {
-            await executeVerificationsToBet(page, casinoFrame, config)
+            await executeVerificationsToBet(page, config)
         }
 
         await printBetsResult(casinoFrame)
         await logout(page)
-    } catch (e) {
-        actions.printError(e)
-        await actions.printScreen(page)
-    } finally {
-        await browser.close()
-    }
+
+    })
+
+    await browser.close()
 }
 
 start();

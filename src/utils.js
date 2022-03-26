@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
+
+var print_step = 1;
+var print_green = 1;
+var print_loss = 1
+
 const sleep = function (ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -37,16 +42,75 @@ const clearFolder = (directory) => new Promise((resolve, reject) => {
 
 async function runCatchingAsync(func) {
   try {
-      await func()
+    await func()
   } catch (error) {
-      actions.printError(error)
-      await actions.printScreen(page)
+    printError(error)
+    await printScreen(page)
   }
 }
+
+
+const printScreen = async function (page) {
+  if (vars.enablePrint) {
+
+    if (!fs.existsSync('screenshots')) {
+      fs.mkdirSync('screenshots');
+    }
+
+    let path = `screenshots/step-${print_step}.jpg`
+    await page.screenshot({ path: path });
+    console.log(`print -> ${path}\n`)
+  }
+
+  print_step++;
+}
+
+const printGreen = async function (page) {
+  if (vars.enablePrint) {
+
+    if (!fs.existsSync('screenshots')) {
+      fs.mkdirSync('screenshots');
+    }
+
+    let path = `screenshots/green-${print_green}.jpg`
+    await page.screenshot({ path: path });
+    console.log(`print green -> ${path}\n`)
+  }
+
+  print_green++;
+}
+
+
+const printLoss = async function (page) {
+  if (vars.enablePrint) {
+
+    if (!fs.existsSync('screenshots')) {
+      fs.mkdirSync('screenshots');
+    }
+
+    let path = `screenshots/loss-${print_loss}.jpg`
+    await page.screenshot({ path: path });
+    console.log(`print loss -> ${path}\n`)
+  }
+
+  print_loss++;
+}
+
+const printError = function (e) {
+  console.error(`Error -> ${e.message}\n`)
+  console.log('-------------------------')
+  console.log(`\n${e.stack}\n`)
+  console.log('-------------------------')
+}
+
 
 module.exports = {
   sleep,
   range,
   clearFolder,
-  runCatchingAsync
+  runCatchingAsync,
+  printScreen,
+  printGreen,
+  printLoss,
+  printError
 }

@@ -257,7 +257,7 @@ async function start() {
     const browser = await createBrowser()
     const page = await createPage(browser)
 
-    await utils.runCatchingAsync(_ => {
+    await utils.runCatchingAsync(async _ => {
 
         await initHomePage(page)
         await login(page, config.username, config.password)

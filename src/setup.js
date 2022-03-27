@@ -22,7 +22,7 @@ const ask = (question) => new Promise(resolve => {
 })
 
 async function askStrategy() {
-    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Dúzia única`)
+    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Dúzia única\n`)
 
     switch (answer) {
         case "1":

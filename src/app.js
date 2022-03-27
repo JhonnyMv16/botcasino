@@ -278,7 +278,7 @@ async function start() {
         await printBetsResult(casinoFrame)
         await logout(page)
 
-    })
+    }, async () => { await actions.printScreen(page) })
 
     await browser.close()
 }

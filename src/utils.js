@@ -40,12 +40,12 @@ const clearFolder = (directory) => new Promise((resolve, reject) => {
   })
 })
 
-async function runCatchingAsync(func) {
+async function runCatchingAsync(func, onError) {
   try {
     await func()
   } catch (error) {
     printError(error)
-    await printScreen(page)
+    await onError(error)
   }
 }
 

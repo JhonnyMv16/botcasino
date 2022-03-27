@@ -25,6 +25,7 @@ exports.bet = async function (casinoFrame, betCode, attempt) {
             break
         case 1:
             clicksToBet = 1
+            break
         default:
             throw Error(`Invalid attempet ${attempt}`)
 

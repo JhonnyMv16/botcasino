@@ -147,9 +147,19 @@ const findPossibleBet = function (tables, config) {
 async function clickMinValue(page, frame) {
     console.log('Click no valor mínimo..')
     await frame.evaluate(_ => {
-        let element = document.querySelector('.chip.arrow-slider__element')
-        let rect = element.getBoundingClientRect()
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
 
+        let elements = document.querySelectorAll('.chip.arrow-slider__element')
+        var element = undefined
+
+        for (let index = 0; index < elements.length; index++) {
+            let el = elements[index]
+            if (el.textContent === "2.5") {
+                element = el
+            }
+        }
+
+        let rect = element.getBoundingClientRect()
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initMouseEvent(
             'click', true, true, window, 0,
@@ -157,7 +167,7 @@ async function clickMinValue(page, frame) {
             false, false, 0, null
         );
 
-        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
+        document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
     })
     await utils.sleep(1000)
     await utils.printScreen(page)

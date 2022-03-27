@@ -1,3 +1,7 @@
+exports.HIGH_DOZEN = 'HIGH_DOZEN'
+exports.MEDIUM_DOZEN = 'MEDIUM_DOZEN'
+exports.LOW_DOZEN = 'LOW_DOZEN'
+
 exports.DB_DM = 'DB_DM'
 exports.DM_DA = 'DM_DA'
 exports.DB_DA = 'DB_DA'

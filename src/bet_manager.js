@@ -4,9 +4,11 @@ const utils = require('./utils.js')
 const simple_strategy = require('./strategies/simple.js')
 const double_strategy = require('./strategies/double.js')
 const double_zero_strategy = require('./strategies/double_zero.js')
+const unic_dozen_strategy = require('./strategies/unic_dozen.js')
+
 const codes = require('./strategies/codes.js')
 
-const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO } = require('./setup.js')
+const { STRATEGY_SIMPLE, STRATEGY_DOUBLE, STRATEGY_DOUBLE_ZERO, STRATEGY_UNIC_DOZEN } = require('./setup.js')
 
 const dG = utils.range(25, 36)
 const dM = utils.range(13, 24)
@@ -67,39 +69,73 @@ const findPossibleBet = function (tables, config) {
 
         let history = table.history
 
-        if (table.min === 2.50) {
-            if (config.strategy !== STRATEGY_SIMPLE && canBet(dG, history, config.criterion)) {
-                let bet = 'Dúzia baixa e dúzia média'
-                let code = codes.DB_DM
+        /* VERIFY UNIC DOZEN STRATEGY */
+        if (config.strategy === STRATEGY_UNIC_DOZEN) {
+
+            let historyIncludesZero = history.includes(0)
+            if (historyIncludesZero) { return }
+
+            let historyIncludesHighDozen = dG.some(value => history.includes(value))
+            let historyIncludesMediumDozen = dM.some(value => history.includes(value))
+            let historyIncludesLowDozen = d.some(value => history.includes(value))
+
+            if (!historyIncludesHighDozen) {
+                let bet = 'Dúzia alta'
+                let code = codes.HIGH_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dM, history, config.criterion)) {
-                let bet = 'Dúzia baixa e dúzia alta'
-                let code = codes.DB_DA
+            } else if (!historyIncludesMediumDozen) {
+                let bet = 'Dúzia média'
+                let code = codes.MEDIUM_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(dB, history, config.criterion)) {
-                let bet = 'Dúzia média e dúzia alta'
-                let code = codes.DM_DA
+            } else if (!historyIncludesLowDozen) {
+                let bet = 'Dúzia baixa'
+                let code = codes.LOW_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cOne, history, config.criterion)) {
-                let bet = 'Coluna 2 e coluna 3'
-                let code = codes.BET_C2_C3
-                tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cTwo, history, config.criterion)) {
-                let bet = 'Coluna 1 e coluna 3'
-                let code = codes.BET_C1_C3
-                tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy !== STRATEGY_SIMPLE && canBet(cThree, history, config.criterion)) {
-                let bet = 'Coluna 1 e coluna 2'
-                let code = codes.BET_C1_C2
-                tablesToBet.push({ name, bet, code, history, index })
-            } else if (config.strategy === STRATEGY_SIMPLE && canBet(lowNumbers, history, config.criterion)) {
+            }
+
+            return
+        }
+
+        /* VERIFY SIMPLE STRATEGY */
+        if (config.strategy === STRATEGY_SIMPLE) {
+            if (canBet(lowNumbers, history, config.criterion)) {
                 let bet = 'Números altos'
                 let code = codes.BET_HN
                 tablesToBet.push({ name, bet, code, history, index })
-            }
-            else if (config.strategy === STRATEGY_SIMPLE && canBet(highNumbers, history, config.criterion)) {
+            } else if (canBet(highNumbers, history, config.criterion)) {
                 let bet = 'Números baixos'
                 let code = codes.BET_LN
+                tablesToBet.push({ name, bet, code, history, index })
+            }
+
+            return
+        }
+
+        /* VERIFY DOUBLE STRATEGY */
+        if (config.strategy === STRATEGY_DOUBLE || config.strategy === STRATEGY_DOUBLE_ZERO) {
+            if (canBet(dG, history, config.criterion)) {
+                let bet = 'Dúzia baixa e dúzia média'
+                let code = codes.DB_DM
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(dM, history, config.criterion)) {
+                let bet = 'Dúzia baixa e dúzia alta'
+                let code = codes.DB_DA
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(dB, history, config.criterion)) {
+                let bet = 'Dúzia média e dúzia alta'
+                let code = codes.DM_DA
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cOne, history, config.criterion)) {
+                let bet = 'Coluna 2 e coluna 3'
+                let code = codes.BET_C2_C3
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cTwo, history, config.criterion)) {
+                let bet = 'Coluna 1 e coluna 3'
+                let code = codes.BET_C1_C3
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (canBet(cThree, history, config.criterion)) {
+                let bet = 'Coluna 1 e coluna 2'
+                let code = codes.BET_C1_C2
                 tablesToBet.push({ name, bet, code, history, index })
             }
         }
@@ -194,6 +230,18 @@ function isBetGreen(betCode, number, strategy) {
             result = highNumbers.includes(number)
             break;
         }
+        case codes.HIGH_DOZEN: {
+            result = dG.includes(number)
+            break
+        }
+        case codes.MEDIUM_DOZEN: {
+            result = dM.includes(number)
+            break
+        }
+        case codes.LOW_DOZEN: {
+            result = dB.includes(number)
+            break
+        }
     }
 
     return result
@@ -232,6 +280,10 @@ async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
         }
         case STRATEGY_DOUBLE_ZERO: {
             await double_zero_strategy.bet(casinoFrame, betCode, attempt)
+            break
+        }
+        case STRATEGY_UNIC_DOZEN: {
+            await unic_dozen_strategy.bet(casinoFrame, betCode, attempt)
             break
         }
         default:

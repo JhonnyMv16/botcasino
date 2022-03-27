@@ -10,6 +10,7 @@ const DEFAULT_MAX_LOSS = 1
 const STRATEGY_SIMPLE = 1
 const STRATEGY_DOUBLE = 2
 const STRATEGY_DOUBLE_ZERO = 3
+const STRATEGY_UNIC_DOZEN = 4
 
 const reader = readline.createInterface({
     input: process.stdin,
@@ -21,7 +22,7 @@ const ask = (question) => new Promise(resolve => {
 })
 
 async function askStrategy() {
-    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n`)
+    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Dúzia única`)
 
     switch (answer) {
         case "1":
@@ -30,9 +31,11 @@ async function askStrategy() {
             return STRATEGY_DOUBLE
         case "3":
             return STRATEGY_DOUBLE_ZERO
+        case "4":
+            return STRATEGY_UNIC_DOZEN
     }
 
-    throw Error(`${answer} is an invalid Strategy, should be 1 or 2`)
+    throw Error(`${answer} is an invalid Strategy`)
 }
 
 async function askMaxBets() {
@@ -155,7 +158,8 @@ const runSetup = async function () {
 
 module.exports = {
     runSetup,
-    STRATEGY_SIMPLE: STRATEGY_SIMPLE,
-    STRATEGY_DOUBLE: STRATEGY_DOUBLE,
-    STRATEGY_DOUBLE_ZERO: STRATEGY_DOUBLE_ZERO
+    STRATEGY_SIMPLE,
+    STRATEGY_DOUBLE,
+    STRATEGY_DOUBLE_ZERO,
+    STRATEGY_UNIC_DOZEN
 }

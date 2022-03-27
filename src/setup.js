@@ -94,11 +94,11 @@ async function askPassword() {
 }
 
 async function askAttempts() {
-    let possibleAttempts = ['1', '2', '3', "4"]
+    let possibleAttempts = ['1', '2', '3', "4", "5", "6", "7"]
     let answer = await ask("Quantidade de tentativas? (Martingale)\n")
 
     if (!possibleAttempts.includes(answer)) {
-        throw Error("A quantidade precisar estar entre 1 e 4")
+        throw Error(`A quantidade precisar estar entre ${possibleAttempts[0]} e ${possibleAttempts[possibleAttempts.length - 1]}`)
     }
 
     return Number(answer)

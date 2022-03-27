@@ -6,7 +6,7 @@ exports.bet = async function (casinoFrame, betCode, attempt) {
 
     switch (attempt) {
         case 7:
-            clicksToBet = 12
+            clicksToBet = 13
             break
         case 6:
             clicksToBet = 9

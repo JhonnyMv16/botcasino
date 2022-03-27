@@ -59,15 +59,10 @@ async function askVerifications() {
 }
 
 async function askBetCriterion() {
-    let possibleCriterions = ["4", "5", "6", "7"]
-    let answer = await ask(`Critério de aposta? (5) [4 - 7] \n`)
+    let answer = await ask(`Critério de aposta? (5)\n`)
 
     if (answer === "") {
         return DEFAULT_CRITERION
-    }
-
-    if (!possibleCriterions.includes(answer)) {
-        throw Error("Critério inválido")
     }
 
     return Number(answer)

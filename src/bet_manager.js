@@ -62,7 +62,7 @@ const findPossibleBet = function (tables, config) {
         let name = table.name
         let index = table.index
 
-        if (table.history.length <= config.criterion) {
+        if (table.history.length < config.criterion) {
             console.log(`Histórico não encontrado, mesa ${name}, history: ${table.history}`)
             return
         }
@@ -87,11 +87,14 @@ const findPossibleBet = function (tables, config) {
                 let bet = 'Dúzia média'
                 let code = codes.MEDIUM_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (!historyIncludesLowDozen) {
+            } 
+            /*
+            else if (!historyIncludesLowDozen) {
                 let bet = 'Dúzia baixa'
                 let code = codes.LOW_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
             }
+            */
 
             return
         }
@@ -147,8 +150,6 @@ const findPossibleBet = function (tables, config) {
 async function clickMinValue(page, frame) {
     console.log('Click no valor mínimo..')
     await frame.evaluate(_ => {
-        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
-
         let elements = document.querySelectorAll('.chip.arrow-slider__element')
         var element = undefined
 

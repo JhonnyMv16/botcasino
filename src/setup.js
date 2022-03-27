@@ -115,10 +115,10 @@ async function askMaxLoss() {
 }
 
 async function askUseMinValue() {
-    let answer = await ask('Aposta com valor mínimo R$ 2,5 ? "s" ou "n"\n')
+    let answer = await ask('Aposta com valor mínimo R$ 2,5 ? "sim" ou "não"\n')
     switch (answer.toLowerCase()) {
         case "sim":
-        case "sim":
+        case "ss":
         case "s":
             return true
         case "não":

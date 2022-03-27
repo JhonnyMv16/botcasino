@@ -77,7 +77,7 @@ const findPossibleBet = function (tables, config) {
 
             let historyIncludesHighDozen = dG.some(value => history.includes(value))
             let historyIncludesMediumDozen = dM.some(value => history.includes(value))
-            let historyIncludesLowDozen = d.some(value => history.includes(value))
+            let historyIncludesLowDozen = dB.some(value => history.includes(value))
 
             if (!historyIncludesHighDozen) {
                 let bet = 'Dúzia alta'

@@ -6,6 +6,13 @@ var print_step = 1;
 var print_green = 1;
 var print_loss = 1
 
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 const sleep = function (ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -99,6 +106,7 @@ module.exports = {
   range,
   clearFolder,
   runCatchingAsync,
+  getRandomInt,
   printScreen,
   printGreen,
   printLoss,

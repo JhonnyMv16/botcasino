@@ -202,8 +202,7 @@ async function executeVerificationsToBet(page, config) {
             console.log('\nOpen some table to avoid disconnect!')
             await utils.printScreen(page)
 
-            let random = Math.floor(Math.random() * tables.length)
-            let someTable = tables[random]
+            let someTable = tables[utils.getRandomInt(0, tables.length)]
             await actions.openTable(casinoFrame, someTable)
             await utils.sleep(10000)
             await actions.closeCasinoLive(casinoFrame)
@@ -216,9 +215,7 @@ async function executeVerificationsToBet(page, config) {
             continue
         }
 
-        let randomBet = Math.floor(Math.random() * possibleBets.length)
-        let possibleBet = possibleBets[randomBet]
-
+        let possibleBet = possibleBets[utils.getRandomInt(0, possibleBets.length)]
         if (lastEnterTable === possibleBet.name) {
             continue
         }

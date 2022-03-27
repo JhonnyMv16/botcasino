@@ -136,13 +136,19 @@ const runSetup = async function () {
 
             await utils.clearFolder('screenshots')
 
+            var shouldUseMinValue = true
+            
             let strategy = await askStrategy()
             let attempts = await askAttempts()
             let maxBets = await askMaxBets()
             let maxLoss = await askMaxLoss()
             let criterion = await askBetCriterion()
             let verifications = await askVerifications()
-            let shouldUseMinValue = await askUseMinValue()
+
+            if (strategy !== STRATEGY_UNIC_DOZEN) {
+                shouldUseMinValue = await askUseMinValue()
+            }
+
             let username = await askUsername()
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE

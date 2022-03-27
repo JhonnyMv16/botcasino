@@ -263,7 +263,7 @@ async function executeBet(page, casinoFrame, table, state, config) {
         var oldHistory = currentState.history
 
         while (!finishedRound) {
-            await utils.sleep(500)
+            await utils.sleep(250)
 
             let newState = await actions.getTableState(casinoFrame)
             currentState = newState

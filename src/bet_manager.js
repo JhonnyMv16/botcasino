@@ -360,6 +360,8 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
     let balance = await actions.getBalance(casinoFrame)
     let resultMessage = getResultMessage(isResultGreen, resultNumber, table, attempts, balance)
+
+    console.log(resultMessage)
     await utils.printResult(isResultGreen, page)
 
     if (config.shouldSendEmailResult) {

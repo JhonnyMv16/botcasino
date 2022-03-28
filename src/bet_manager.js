@@ -5,6 +5,7 @@ const simple_strategy = require('./strategies/simple.js')
 const double_strategy = require('./strategies/double.js')
 const double_zero_strategy = require('./strategies/double_zero.js')
 const unic_dozen_strategy = require('./strategies/unic_dozen.js')
+const betmailer = require('./mailer.js')
 
 const codes = require('./strategies/codes.js')
 
@@ -87,7 +88,7 @@ const findPossibleBet = function (tables, config) {
                 let bet = 'Dúzia média'
                 let code = codes.MEDIUM_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            } 
+            }
             /*
             else if (!historyIncludesLowDozen) {
                 let bet = 'Dúzia baixa'
@@ -168,7 +169,7 @@ async function clickMinValue(page, frame) {
             false, false, 0, null
         );
 
-        document.elementFromPoint(rect.x, rect.y + 10).dispatchEvent(clickEvent);
+        document.elementFromPoint(rect.x, rect.y).dispatchEvent(clickEvent);
     })
     await utils.sleep(1000)
     await utils.printScreen(page)
@@ -304,9 +305,7 @@ async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
 
 async function executeBet(page, casinoFrame, table, state, config) {
 
-    if (config.shouldUseMinValue) {
-        await clickMinValue(page, casinoFrame)
-    }
+    await clickMinValue(page, casinoFrame)
 
     var currentState = state
     var isResultGreen = false
@@ -346,6 +345,7 @@ async function executeBet(page, casinoFrame, table, state, config) {
     if (isResultGreen) {
         console.log(`${resultNumber} GREEN ✔️\n`)
         await utils.printGreen(page)
+
     } else {
         console.log(`${resultNumber} LOSS ❌\n`)
         await utils.printLoss(page)
@@ -353,7 +353,17 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
     console.log('Aposta finalizada!')
     await utils.sleep(5000)
-    await actions.printBalance(casinoFrame)
+    let balance = await actions.getBalance(casinoFrame)
+
+    if (config.shouldSendEmailResult) {
+        if (isResultGreen) {
+            betmailer.send(config.email, `${resultNumber} GREEN ✔️\n\nSaldo: R$ ${balance}`.replace(".", ','))
+        } else {
+            betmailer.send(config.email, `${resultNumber} LOSS ❌\n\nSaldo: R$ ${balance}`.replace(".", ','))
+        }
+    } else {
+        await actions.printBalance(casinoFrame)
+    }
 
     return isResultGreen
 }

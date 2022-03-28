@@ -21,6 +21,32 @@ const ask = (question) => new Promise(resolve => {
     reader.question(question, answer => resolve(answer))
 })
 
+async function askShouldSendResult() {
+    let answer = await ask('Deseja receber os resultados por email?\n')
+    switch (answer.toLowerCase()) {
+        case "sim":
+        case "ss":
+        case "s":
+            return true
+        case "não":
+        case "nao":
+        case "n":
+            return false
+        default:
+            throw Error("Resposta inválida, você precisa digitar 'Sim' ou 'Não'!")
+    }
+}
+
+async function askEmail() {
+    let answer = await ask(`Digite o email?\n`)
+
+    if (answer === "") {
+        throw Error("Email inválido")
+    }
+
+    return answer
+}
+
 async function askStrategy() {
     let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Dúzia única\n`)
 
@@ -132,7 +158,8 @@ const runSetup = async function () {
             await utils.clearFolder('screenshots')
 
             var shouldUseMinValue = true
-            
+            var email = undefined
+
             let strategy = await askStrategy()
             let attempts = await askAttempts()
             let maxBets = await askMaxBets()
@@ -144,11 +171,18 @@ const runSetup = async function () {
                 shouldUseMinValue = await askUseMinValue()
             }
 
+            
+            var shouldSendEmailResult = await askShouldSendResult()
+
+            if (shouldSendEmailResult) {
+                email = await askEmail()
+            }
+
             let username = await askUsername()
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ strategy, attempts, maxLoss, maxBets, verifications, shouldUseMinValue, username, password, minBalance, criterion })
+            resolve({ strategy, attempts, maxLoss, maxBets, verifications, shouldUseMinValue, username, password, minBalance, criterion, shouldSendEmailResult, email })
         } catch (e) {
             reject(e)
         } finally {

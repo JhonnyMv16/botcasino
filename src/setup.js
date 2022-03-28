@@ -21,8 +21,7 @@ const ask = (question) => new Promise(resolve => {
     reader.question(question, answer => resolve(answer))
 })
 
-async function askShouldSendResult() {
-    let answer = await ask('Deseja receber os resultados por email?\n')
+function getTrueOrFalseByAnswer(answer) {
     switch (answer.toLowerCase()) {
         case "sim":
         case "ss":
@@ -35,6 +34,11 @@ async function askShouldSendResult() {
         default:
             throw Error("Resposta inválida, você precisa digitar 'Sim' ou 'Não'!")
     }
+}
+
+async function askShouldSendResult() {
+    let answer = await ask('Deseja receber os resultados por email?\n')
+    return getTrueOrFalseByAnswer(answer)
 }
 
 async function askEmail() {
@@ -136,20 +140,15 @@ async function askMaxLoss() {
 }
 
 async function askUseMinValue() {
-    let answer = await ask('Aposta com valor mínimo R$ 2,5 ? "sim" ou "não"\n')
-    switch (answer.toLowerCase()) {
-        case "sim":
-        case "ss":
-        case "s":
-            return true
-        case "não":
-        case "nao":
-        case "n":
-            return false
-        default:
-            throw Error("Resposta inválida, você precisa digitar 'Sim' ou 'Não'!")
-    }
+    let answer = await ask('Aposta com valor mínimo R$ 2,5? "sim" ou "não"\n')
+    return getTrueOrFalseByAnswer(answer)
 }
+
+async function askShowVerifications() {
+    let answer = await ask(`Deseja ver logs de verificação? "sim" ou "não"\n`)
+    return getTrueOrFalseByAnswer(answer)
+}
+
 
 const runSetup = async function () {
     return new Promise(async (resolve, reject) => {
@@ -166,18 +165,34 @@ const runSetup = async function () {
             let criterion = await askBetCriterion()
             let verifications = await askVerifications()
             let shouldUseMinValue = await askUseMinValue()
-            
+
             var shouldSendEmailResult = await askShouldSendResult()
 
             if (shouldSendEmailResult) {
                 email = await askEmail()
             }
 
+            let shouldShowVerifications = await askShowVerifications()
             let username = await askUsername()
             let password = await askPassword()
             let minBalance = DEFAULT_MIN_BALANCE
 
-            resolve({ strategy, attempts, maxLoss, maxBets, verifications, shouldUseMinValue, username, password, minBalance, criterion, shouldSendEmailResult, email })
+            resolve({
+                strategy,
+                attempts,
+                maxLoss,
+                maxBets,
+                verifications,
+                shouldUseMinValue,
+                username,
+                password,
+                minBalance,
+                criterion,
+                shouldShowVerifications,
+                shouldSendEmailResult,
+                email
+            })
+
         } catch (e) {
             reject(e)
         } finally {

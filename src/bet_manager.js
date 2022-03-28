@@ -101,7 +101,7 @@ const findPossibleBet = function (tables, config) {
                 tablesToBet.push({ name, bet, code, history, index })
             }
             */
-
+ 
             else if (!historyIncludesFirstCol) {
                 let bet = 'Coluna 1'
                 let code = codes.FIRST_COL

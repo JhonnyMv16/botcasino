@@ -182,6 +182,8 @@ function shouldContinueVerification(verifications, config) {
 async function executeVerificationsToBet(page, config) {
     var verifications = 1
 
+    console.log('🔹 Iniciando verificações 🔹')
+
     while (shouldContinueVerification(verifications, config)) {
 
         verifications += 1
@@ -195,7 +197,9 @@ async function executeVerificationsToBet(page, config) {
         let possibleBets = betManager.findPossibleBet(tables, config)
         let hasPossibleBet = possibleBets.length > 0
 
-        console.log(`Verificação ${verifications}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
+        if (config.shouldShowVerifications) {
+            console.log(`Verificação ${verifications}, Mesas ${tables.length}, Possíveis apostas ${possibleBets.length}`)
+        }
 
         // needed to avoid auto disconnect
         if (lastEnterTableCount % 300 === 0) {

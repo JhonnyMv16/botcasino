@@ -313,13 +313,14 @@ function hasErrorInState(state, table, criterion) {
 }
 
 function getResultMessage(isResultGreen, resultNumber, table, attempts, balance) {
+    let line = '------------------------------------------------'
     let green = 'GREEN ✔️'
     let loss = 'LOSS ❌'
     let result = isResultGreen ? green : loss
     let lineOne = `${resultNumber} ${result}\n\n`
-    let lineTwo = `${table.name}, ${table.bet}, tentativa: ${attempts}\n\n`
-    let lineThree = `Saldo: R$ ${balance}`.replace(".", ',')
-    return `${lineOne}${lineTwo}${lineThree}`
+    let lineTwo = `Mesa: ${table.name}\n\nAposta: ${table.bet}\n\nTentativas: ${attempts}\n\n`
+    let lineThree = `Saldo: R$ ${balance}\n\n`.replace(".", ',')
+    return `${line}\n\n${lineOne}${lineTwo}${lineThree}${line}\n`
 }
 
 async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
@@ -382,12 +383,16 @@ async function executeBet(page, casinoFrame, table, state, config) {
             break
         }
 
+        if (attempts == config.attempts) {
+            break
+        }
+
         // wait some time for next bet
         await utils.sleep(3000)
         attempts++
     }
 
-    console.log('Aposta finalizada!')
+    console.log('Aposta finalizada!\n')
     await utils.sleep(5000)
 
     let balance = await actions.getBalance(casinoFrame)

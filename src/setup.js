@@ -48,7 +48,7 @@ async function askEmail() {
 }
 
 async function askStrategy() {
-    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Dúzia única\n`)
+    let answer = await ask(`Escolha uma estratégia?\n1 - Simples \n2 - Dupla \n3 - Dupla com zero\n4 - Coluna ou dúzia única\n`)
 
     switch (answer) {
         case "1":

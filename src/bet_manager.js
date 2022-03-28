@@ -4,7 +4,7 @@ const utils = require('./utils.js')
 const simple_strategy = require('./strategies/simple.js')
 const double_strategy = require('./strategies/double.js')
 const double_zero_strategy = require('./strategies/double_zero.js')
-const unic_dozen_strategy = require('./strategies/unic_dozen.js')
+const unic_dozen_strategy = require('./strategies/unic.js')
 const betmailer = require('./mailer.js')
 
 const codes = require('./strategies/codes.js')
@@ -80,6 +80,10 @@ const findPossibleBet = function (tables, config) {
             let historyIncludesMediumDozen = dM.some(value => history.includes(value))
             let historyIncludesLowDozen = dB.some(value => history.includes(value))
 
+            let historyIncludesFirstCol = cOne.some(value => history.includes(value))
+            let historyIncludesSecondCol = cTwo.some(value => history.includes(value))
+            let historyIncludesThirdCol = cThree.some(value => history.includes(value))
+
             if (!historyIncludesHighDozen) {
                 let bet = 'Dúzia alta'
                 let code = codes.HIGH_DOZEN
@@ -89,6 +93,7 @@ const findPossibleBet = function (tables, config) {
                 let code = codes.MEDIUM_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
             }
+
             /*
             else if (!historyIncludesLowDozen) {
                 let bet = 'Dúzia baixa'
@@ -96,6 +101,20 @@ const findPossibleBet = function (tables, config) {
                 tablesToBet.push({ name, bet, code, history, index })
             }
             */
+
+            else if (!historyIncludesFirstCol) {
+                let bet = 'Coluna 1'
+                let code = codes.FIRST_COL
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (!historyIncludesSecondCol) {
+                let bet = 'Coluna 2'
+                let code = codes.SECOND_COL
+                tablesToBet.push({ name, bet, code, history, index })
+            } else if (!historyIncludesThirdCol) {
+                let bet = 'Coluna 3'
+                let code = codes.THIRD_COL
+                tablesToBet.push({ name, bet, code, history, index })
+            }
 
             return
         }
@@ -252,6 +271,18 @@ function isBetGreen(betCode, number, strategy) {
         }
         case codes.LOW_DOZEN: {
             result = dB.includes(number)
+            break
+        }
+        case codes.FIRST_COL: {
+            result = cOne.includes(number)
+            break
+        }
+        case codes.SECOND_COL: {
+            result = cTwo.includes(number)
+            break
+        }
+        case codes.THIRD_COL: {
+            result = cThree.includes(number)
             break
         }
     }

@@ -34,15 +34,27 @@ exports.bet = async function (casinoFrame, betCode, attempt) {
     switch (betCode) {
         case codes.HIGH_DOZEN: {
             await clicks.clickHighDozen(casinoFrame, clicksToBet)
-            break;
+            break
         }
         case codes.MEDIUM_DOZEN: {
             await clicks.clickMediumDozen(casinoFrame, clicksToBet)
-            break;
+            break
         }
         case codes.LOW_DOZEN: {
             await clicks.clickLowDozen(casinoFrame, clicksToBet)
-            break;
+            break
+        }
+        case codes.FIRST_COL: {
+            await clicks.clickColOne(casinoFrame, clicksToBet)
+            break
+        }
+        case codes.SECOND_COL: {
+            await clicks.clickColTwo(casinoFrame, clicksToBet)
+            break
+        }
+        case codes.THIRD_COL: {
+            await clicks.clickColThree(casinoFrame, clicksToBet)
+            break
         }
     }
 }

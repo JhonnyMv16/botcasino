@@ -80,7 +80,6 @@ const printGreen = async function (page) {
   print_green++;
 }
 
-
 const printLoss = async function (page) {
   if (!fs.existsSync('screenshots')) {
     fs.mkdirSync('screenshots');
@@ -91,6 +90,14 @@ const printLoss = async function (page) {
   console.log(`print loss -> ${path}\n`)
 
   print_loss++;
+}
+
+const printResult = async function (isResultGreen, page) {
+  if (isResultGreen) {
+    await printGreen(page)
+  } else {
+    await printLoss(page)
+  }
 }
 
 const printError = function (e) {
@@ -110,5 +117,6 @@ module.exports = {
   printScreen,
   printGreen,
   printLoss,
+  printResult,
   printError
 }

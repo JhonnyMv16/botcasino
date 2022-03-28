@@ -280,6 +280,16 @@ function hasErrorInState(state, table, criterion) {
     return false
 }
 
+function getResultMessage(isResultGreen, resultNumber, table, attempts, balance) {
+    let green = 'GREEN ✔️'
+    let loss = 'LOSS ❌'
+    let result = isResultGreen ? green : loss
+    let lineOne = `${resultNumber} ${result}\n\n`
+    let lineTwo = `${table.name}, ${table.bet}, tentativa: ${attempts}\n\n`
+    let lineThree = `Saldo: R$ ${balance}`.replace(".", ',')
+    return `${lineOne}${lineTwo}${lineThree}`
+}
+
 async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
     switch (strategy) {
         case STRATEGY_SIMPLE: {
@@ -310,9 +320,9 @@ async function executeBet(page, casinoFrame, table, state, config) {
     var currentState = state
     var isResultGreen = false
     var resultNumber = -1
+    var attempts = 1
 
-    for (let attempts = 1; attempts <= config.attempts && !isResultGreen; attempts++) {
-
+    while (attempts <= config.attempts && !isResultGreen) {
         console.log(`Tentativa ${attempts}\n`)
 
         await betByStrategy(casinoFrame, table.code, attempts, config.strategy)
@@ -336,33 +346,25 @@ async function executeBet(page, casinoFrame, table, state, config) {
             isResultGreen = isBetGreen(table.code, resultNumber, config.strategy)
         }
 
-        if (!isResultGreen) {
+        if (isResultGreen) {
+            break
+        } else {
             // wait some time for next bet
-            await utils.sleep(2000)
+            await utils.sleep(3000)
         }
-    }
 
-    if (isResultGreen) {
-        console.log(`${resultNumber} GREEN ✔️\n`)
-        await utils.printGreen(page)
-
-    } else {
-        console.log(`${resultNumber} LOSS ❌\n`)
-        await utils.printLoss(page)
+        attempts++
     }
 
     console.log('Aposta finalizada!')
     await utils.sleep(5000)
+
     let balance = await actions.getBalance(casinoFrame)
+    let resultMessage = getResultMessage(isResultGreen, resultNumber, table, attempts, balance)
+    await utils.printResult(isResultGreen, page)
 
     if (config.shouldSendEmailResult) {
-        if (isResultGreen) {
-            betmailer.send(config.email, `${resultNumber} GREEN ✔️\n\nSaldo: R$ ${balance}`.replace(".", ','))
-        } else {
-            betmailer.send(config.email, `${resultNumber} LOSS ❌\n\nSaldo: R$ ${balance}`.replace(".", ','))
-        }
-    } else {
-        await actions.printBalance(casinoFrame)
+        betmailer.send(config.email, resultMessage)
     }
 
     return isResultGreen

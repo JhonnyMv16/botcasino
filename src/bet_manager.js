@@ -348,11 +348,10 @@ async function executeBet(page, casinoFrame, table, state, config) {
 
         if (isResultGreen) {
             break
-        } else {
-            // wait some time for next bet
-            await utils.sleep(3000)
         }
 
+        // wait some time for next bet
+        await utils.sleep(3000)
         attempts++
     }
 

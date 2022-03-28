@@ -348,7 +348,9 @@ async function betByStrategy(casinoFrame, betCode, attempt, strategy) {
 
 async function executeBet(page, casinoFrame, table, state, config) {
 
-    await clickMinValue(page, casinoFrame)
+    if (config.shouldUseMinValue) {
+        await clickMinValue(page, casinoFrame)
+    }
 
     var currentState = state
     var isResultGreen = false

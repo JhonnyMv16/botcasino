@@ -157,7 +157,6 @@ const runSetup = async function () {
 
             await utils.clearFolder('screenshots')
 
-            var shouldUseMinValue = true
             var email = undefined
 
             let strategy = await askStrategy()
@@ -166,11 +165,7 @@ const runSetup = async function () {
             let maxLoss = await askMaxLoss()
             let criterion = await askBetCriterion()
             let verifications = await askVerifications()
-
-            if (strategy !== STRATEGY_UNIC_DOZEN) {
-                shouldUseMinValue = await askUseMinValue()
-            }
-
+            let shouldUseMinValue = await askUseMinValue()
             
             var shouldSendEmailResult = await askShouldSendResult()
 

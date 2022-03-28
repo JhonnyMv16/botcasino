@@ -1,3 +1,5 @@
+const utils = require('./utils.js')
+
 const TABLES_BLOCK_LIST = [
     'Football French Roulette',
     'Spread Bet Roulette',
@@ -109,6 +111,7 @@ exports.findCasinoFrame = async function (page) {
 exports.closeCasinoLive = async function (casinoFrame) {
     console.log('Closing casino live...')
     await casinoFrame.waitForSelector('span.dealer-message-text', { timeout: 90000 })
+    await utils.sleep(1000)
     let buttons = await casinoFrame.$('.close-button__icon')
 
     if (buttons.length === 0) {

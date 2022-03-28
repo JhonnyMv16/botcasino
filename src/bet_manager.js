@@ -92,29 +92,29 @@ const findPossibleBet = function (tables, config) {
                 let bet = 'Dúzia média'
                 let code = codes.MEDIUM_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
-            }
-
-            /*
-            else if (!historyIncludesLowDozen) {
+            } else if (!historyIncludesLowDozen) {
                 let bet = 'Dúzia baixa'
                 let code = codes.LOW_DOZEN
                 tablesToBet.push({ name, bet, code, history, index })
             }
-            */
- 
+
+            /*
             else if (!historyIncludesFirstCol) {
                 let bet = 'Coluna 1'
                 let code = codes.FIRST_COL
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (!historyIncludesSecondCol) {
+            } 
+            else if (!historyIncludesSecondCol) {
                 let bet = 'Coluna 2'
                 let code = codes.SECOND_COL
                 tablesToBet.push({ name, bet, code, history, index })
-            } else if (!historyIncludesThirdCol) {
+            }
+            else if (!historyIncludesThirdCol) {
                 let bet = 'Coluna 3'
                 let code = codes.THIRD_COL
                 tablesToBet.push({ name, bet, code, history, index })
             }
+            */
 
             return
         }

@@ -169,6 +169,7 @@ const findPossibleBet = function (tables, config) {
 
 async function clickMinValue(page, frame) {
     console.log('Click no valor mínimo..')
+    await utils.sleep(1000)
     await frame.evaluate(_ => {
         let elements = document.querySelectorAll('.chip.arrow-slider__element')
         var element = undefined

@@ -108,7 +108,7 @@ exports.findCasinoFrame = async function (page) {
 
 exports.closeCasinoLive = async function (casinoFrame) {
     console.log('Closing casino live...')
-    await casinoFrame.waitForSelector('span.dealer-message-text', { timeout: 60000 })
+    await casinoFrame.waitForSelector('span.dealer-message-text', { timeout: 90000 })
     let buttons = await casinoFrame.$('.close-button__icon')
 
     if (buttons.length === 0) {

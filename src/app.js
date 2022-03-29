@@ -17,6 +17,10 @@ var betLossCount = 0
 var betGreenCount = 0
 var lastEnterTableCount = 0
 
+var browser = undefined
+var page = undefined
+var config = undefined
+
 async function createBrowser() {
     return await puppeteer.launch()
 }
@@ -251,12 +255,11 @@ async function executeVerificationsToBet(page, config) {
     }
 }
 
-async function start() {
-    const config = await setup.runSetup()
-    const browser = await createBrowser()
-    const page = await createPage(browser)
-
+async function start() {    
     await utils.runCatchingAsync(async _ => {
+        config = await setup.runSetup()
+        browser = await createBrowser()
+        page = await createPage(browser)
 
         await initHomePage(page)
         await login(page, config.username, config.password)

@@ -20,12 +20,13 @@ var lastEnterTableCount = 0
 var browser = undefined
 var page = undefined
 var config = undefined
+var casinoFrame = undefined
 
 async function createBrowser() {
     return await puppeteer.launch()
 }
 
-async function saveCookies(page) {
+async function saveCookies() {
     try {
         const cookies = await page.cookies();
         fs.writeFileSync(vars.exportFiles.cookies, JSON.stringify(cookies, null, 2));
@@ -52,14 +53,13 @@ function readCookies() {
 }
 
 async function createPage(browser) {
-    const page = await browser.newPage();
+    page = await browser.newPage();
     await page.setViewport(vars.viewPort);
     await page.setExtraHTTPHeaders(vars.headers);
     await page.setUserAgent(vars.userAgent);
-    return page
 }
 
-async function initHomePage(page) {
+async function initHomePage() {
     console.log('\nInitializing...\n')
     await page.goto(vars.HOME_URL);
     await page.waitForXPath('//*[contains(text(), "Login")]', { timeout: 0 })
@@ -67,7 +67,7 @@ async function initHomePage(page) {
     await utils.printScreen(page)
 }
 
-async function login(page, username, password) {
+async function login(username, password) {
     console.log('Starting login...')
 
     await page.mouse.click(1648, 66.5)
@@ -87,7 +87,7 @@ async function login(page, username, password) {
     await utils.printScreen(page)
 }
 
-async function openCasinoLive(page) {
+async function openCasinoLive() {
     console.log('Opening casino live...')
     await page.goto('https://casino.bet365.com/Play/LiveRoulette')
     await page.waitForXPath('//*[contains(text(), "Live Roulette ")]', { timeout: 0 })
@@ -96,28 +96,28 @@ async function openCasinoLive(page) {
     console.log('Casino opened!\n')
 }
 
-async function findCasinoFrame(page) {
+async function findCasinoFrame() {
     return await actions.findCasinoFrame(page)
 }
 
-async function closeCasinoLive(page, casinoFrame) {
+async function closeCasinoLive() {
     await actions.closeCasinoLive(casinoFrame)
     await utils.sleep(5000)
     await utils.printScreen(page)
 }
 
-async function closeCasinoOffers(page, casinoFrame) {
+async function closeCasinoOffers() {
     await betManager.clickAnnouncementButton(page, casinoFrame)
     await utils.sleep(2000)
 }
 
-async function clickRouletteTab(page, casinoFrame) {
+async function clickRouletteTab() {
     await actions.clickRouletteTab(casinoFrame)
     await utils.sleep(2000)
     await utils.printScreen(page)
 }
 
-async function logout(page) {
+async function logout() {
     console.log('\nEncerrando...\n')
     if (isExpand) await toggleExpand(page)
 
@@ -130,7 +130,7 @@ async function logout(page) {
     await utils.printScreen(page)
 }
 
-async function toggleExpand(page) {
+async function toggleExpand() {
     console.log(isExpand ? 'Collapsing...' : 'Expanding...')
     isExpand = !isExpand
     await actions.toggleExpandTables(page)
@@ -138,7 +138,7 @@ async function toggleExpand(page) {
     await utils.printScreen(page)
 }
 
-async function mouseUpAndDown(page) {
+async function mouseUpAndDown() {
     await page.keyboard.press('ArrowDown')
     await utils.sleep(300)
     await page.keyboard.press('ArrowUp')
@@ -150,7 +150,7 @@ function hasBalanceToBet(balance, minBalance) {
     return hasBalance
 }
 
-async function printBetsResult(casinoFrame) {
+async function printBetsResult() {
     console.log(`Apostas realizadas: ${betCounter}\n`)
     console.log(`GREEN: ${betGreenCount}\n`)
     console.log(`LOSS: ${betLossCount}\n`)
@@ -183,7 +183,7 @@ function shouldContinueVerification(verifications, config) {
     return true
 }
 
-async function executeVerificationsToBet(page, config) {
+async function executeVerificationsToBet() {
     var verifications = 1
 
     console.log('🔹 Iniciando verificações 🔹')
@@ -196,7 +196,8 @@ async function executeVerificationsToBet(page, config) {
         await utils.sleep(VERIFICATION_DELAY)
         await mouseUpAndDown(page)
 
-        let casinoFrame = await findCasinoFrame(page)
+        casinoFrame = await findCasinoFrame(page)
+
         let tables = await actions.findTablesToBet(casinoFrame)
         let possibleBets = betManager.findPossibleBet(tables, config)
         let hasPossibleBet = possibleBets.length > 0
@@ -261,28 +262,28 @@ async function start() {
         browser = await createBrowser()
         page = await createPage(browser)
 
-        await initHomePage(page)
-        await login(page, config.username, config.password)
-        await openCasinoLive(page)
+        await initHomePage()
+        await login(config.username, config.password)
+        await openCasinoLive()
 
-        let casinoFrame = await findCasinoFrame(page)
+        casinoFrame = await findCasinoFrame()
 
-        await closeCasinoOffers(page, casinoFrame)
-        await closeCasinoLive(page, casinoFrame)
-        await clickRouletteTab(page, casinoFrame)
-        await toggleExpand(page)
+        await closeCasinoOffers()
+        await closeCasinoLive()
+        await clickRouletteTab()
+        await toggleExpand()
 
-        let balance = await actions.getBalance(casinoFrame)
+        let balance = await actions.getBalance()
         printBalance(balance)
 
         if (hasBalanceToBet(balance, config.minBalance)) {
-            await executeVerificationsToBet(page, config)
+            await executeVerificationsToBet(config)
         }
 
-        await printBetsResult(casinoFrame)
-        await logout(page)
+        await printBetsResult()
+        await logout()
 
-    }, async () => { await utils.printScreen(page) })
+    }, async () => { await utils.printScreen() })
 
     await browser.close()
 }
